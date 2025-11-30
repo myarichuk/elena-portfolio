@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Studio backdrop</title>
+  <desc id="desc">Abstract gradient background used for the hero section.</desc>
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f0d0c" />
+      <stop offset="50%" stop-color="#1d1612" />
+      <stop offset="100%" stop-color="#302019" />
+    </linearGradient>
+    <radialGradient id="glow" cx="30%" cy="40%" r="40%">
+      <stop offset="0%" stop-color="#c5a059" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#c5a059" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#grad)" />
+  <circle cx="420" cy="280" r="260" fill="url(#glow)" />
+  <rect x="1100" y="160" width="160" height="500" fill="#d6d3d1" opacity="0.05" />
+  <rect x="180" y="520" width="260" height="280" fill="#e7e5e4" opacity="0.08" />
+  <rect x="760" y="360" width="260" height="360" fill="#f5f5f4" opacity="0.06" />
+</svg>

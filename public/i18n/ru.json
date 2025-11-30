@@ -28,6 +28,11 @@
       "emailInvalid": "Введите корректный email.",
       "messageRequired": "Расскажите, о чем хотите поговорить."
     },
+    "submission": {
+      "success": "Спасибо! Я отвечу на ваше сообщение.",
+      "error": "Не удалось отправить форму. Попробуйте позже.",
+      "misconfigured": "Форма не настроена. Напишите мне напрямую по email."
+    },
     "mailto": { "recipient": "hello@elenayarichuk.com", "subject": "Новый запрос:" }
   },
   "footer": { "copyright": "© 2025 Елена Ярийчук." }

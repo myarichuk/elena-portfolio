@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Weekend Study painting</title>
+  <desc id="desc">Textured abstract placeholder artwork.</desc>
+  <defs>
+    <linearGradient id="canvas" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5f5f4" />
+      <stop offset="100%" stop-color="#e7e5e4" />
+    </linearGradient>
+    <linearGradient id="stroke" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#78412a" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#c59a69" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#2f1b12" stop-opacity="0.75" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#canvas)" />
+  <rect x="80" y="60" width="640" height="880" fill="#12100e" opacity="0.05" />
+  <path d="M140 240 Q260 180 360 240 T580 220" fill="none" stroke="url(#stroke)" stroke-width="40" stroke-linecap="round" />
+  <path d="M200 360 Q360 520 520 360 T660 520" fill="none" stroke="#c5a059" stroke-width="50" stroke-linecap="round" stroke-opacity="0.6" />
+  <path d="M160 520 C220 640 420 700 620 620" fill="none" stroke="#3a2a1e" stroke-width="45" stroke-linecap="round" stroke-opacity="0.65" />
+  <path d="M180 680 C260 820 520 860 620 780" fill="none" stroke="#e2d2c3" stroke-width="35" stroke-linecap="round" stroke-opacity="0.7" />
+</svg>

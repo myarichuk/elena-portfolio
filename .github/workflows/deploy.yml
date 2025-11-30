@@ -28,6 +28,11 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Verify built assets
+        run: |
+          test -f dist/images/hero.svg
+          test -f dist/images/artwork-1.svg
+
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
