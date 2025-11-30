@@ -1,0 +1,51 @@
+[
+  {
+    "id": 1,
+    "title": "Weekend Study",
+    "category": "oil",
+    "src": "https://images.unsplash.com/photo-1579783902614-a3fb39279c0f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    "medium": "Oil on Canvas",
+    "details": "2023"
+  },
+  {
+    "id": 2,
+    "title": "Evening Texture",
+    "category": "abstract",
+    "src": "https://images.unsplash.com/photo-1541963463532-d68292c34b19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    "medium": "Mixed Media",
+    "details": "2023"
+  },
+  {
+    "id": 3,
+    "title": "Sister",
+    "category": "portrait",
+    "src": "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    "medium": "Acrylic on Wood",
+    "details": "Private Collection"
+  },
+  {
+    "id": 4,
+    "title": "Anatomy Practice",
+    "category": "sketch",
+    "src": "https://images.unsplash.com/photo-1615800098779-1be8287d4554?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    "medium": "Charcoal",
+    "details": "Sketchbook IV",
+    "grayscale": true
+  },
+  {
+    "id": 5,
+    "title": "Still Life #42",
+    "category": "oil",
+    "src": "https://images.unsplash.com/photo-1549887552-93f8efb87dfb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    "medium": "Oil on Canvas",
+    "details": "2022"
+  },
+  {
+    "id": 6,
+    "title": "After Tax Season",
+    "category": "abstract",
+    "src": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    "medium": "Acrylic Pour",
+    "details": "2024"
+  }
+]
