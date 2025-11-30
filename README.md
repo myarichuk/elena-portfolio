@@ -16,4 +16,4 @@ Translations are stored as JSON files in `public/i18n`. The app lazily fetches t
 
 ## Contact form
 - The contact form validates required fields client-side and surfaces inline errors with ARIA announcements.
-- Submissions post to Web3Forms at `https://api.web3forms.com/submit`. Provide `VITE_WEB3FORMS_ACCESS_KEY` in your environment and optionally `VITE_CONTACT_EMAIL` to override the default recipient (`hello@elenayarichuk.com`).
+- Submissions post to Web3Forms at `https://api.web3forms.com/submit`.
