@@ -274,8 +274,7 @@ export default function App() {
 
   const contactEmail =
     import.meta.env.VITE_CONTACT_EMAIL || translations?.contact?.mailto?.recipient || DEFAULT_MAIL_RECIPIENT;
-  const mailtoSubject = translations?.contact?.mailto?.subject || 'New inquiry:';
-  const mailtoLink = `mailto:${contactEmail}?subject=${encodeURIComponent(mailtoSubject)}`;
+  const submissionSubject = translations?.contact?.mailto?.subject || 'New inquiry:';
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -288,13 +287,7 @@ export default function App() {
     if (Object.keys(validation).length > 0) return;
 
     if (!WEB3FORMS_ACCESS_KEY) {
-      const fallbackUrl = `mailto:${contactEmail}?subject=${encodeURIComponent(
-        `${mailtoSubject} ${formData.topic || ''}`.trim()
-      )}&body=${encodeURIComponent(
-        `${formData.message}\n\n${t.contact.form.name}: ${formData.name}\n${t.contact.form.email}: ${formData.email}`.trim()
-      )}`;
-
-      window.location.href = fallbackUrl;
+      console.error('Missing Web3Forms access key (VITE_WEB3FORMS_ACCESS_KEY).');
       setSubmissionState({ status: 'error', message: t.contact.submission.misconfigured });
       return;
     }
@@ -304,10 +297,7 @@ export default function App() {
     formPayload.append('from_name', formData.name.trim());
     formPayload.append('email', formData.email.trim());
     formPayload.append('message', formData.message.trim());
-    formPayload.append(
-      'subject',
-      `${translations?.contact?.mailto?.subject || 'New inquiry:'} ${formData.topic || ''}`.trim()
-    );
+    formPayload.append('subject', `${submissionSubject} ${formData.topic || ''}`.trim());
     formPayload.append('topic', formData.topic || '');
     formPayload.append('recipient', contactEmail);
 
@@ -625,15 +615,6 @@ export default function App() {
         <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="font-serif text-3xl md:text-4xl mb-2 italic">{t.contact.title}</h2>
           <p className="text-[#A8A29E] mb-3 font-light text-sm">{t.contact.desc}</p>
-          <p className="text-[#C5A059] text-[10px] uppercase tracking-[0.25em] mb-1">{t.contact.emailFallback}</p>
-          <a
-            href={mailtoLink}
-            className="text-[#E7E5E4] font-semibold underline underline-offset-4 hover:text-[#C5A059] transition-colors"
-          >
-            {contactEmail}
-          </a>
-          <div className="h-6" aria-hidden="true" />
-          
           <form className={`space-y-6 ${isRTL ? 'text-right' : 'text-left'}`} noValidate onSubmit={handleSubmit}>
             <div className="space-y-6">
               <div>
