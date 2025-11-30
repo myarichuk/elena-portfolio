@@ -11,8 +11,9 @@ Translations are stored as JSON files in `public/i18n`. The app lazily fetches t
 - `npm test` – run node-based sanity checks to confirm locale files share the same shape and JSON assets parse correctly.
 
 ## Assets
-- Images under `public/images` are tracked with Git LFS to keep the repository lean while serving optimized assets.
+- Images under `public/images` are tracked directly in Git (no LFS) so they publish cleanly to GitHub Pages and other static hosts.
+- The GitHub Actions build asserts that required images land in `dist/images` to avoid missing assets during deploys.
 
 ## Contact form
 - The contact form validates required fields client-side and surfaces inline errors with ARIA announcements.
-- Successful submissions compose a `mailto:` link (default: `hello@elenayarichuk.com`) so the page stays fully static for GitHub Pages hosting.
+- Submissions post to Web3Forms at `https://api.web3forms.com/submit`. Provide `VITE_WEB3FORMS_ACCESS_KEY` in your environment and optionally `VITE_CONTACT_EMAIL` to override the default recipient (`hello@elenayarichuk.com`).

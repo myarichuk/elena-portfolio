@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 
 const DEFAULT_MAIL_RECIPIENT = 'hello@elenayarichuk.com';
+const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
+const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
 
 const mergeWithFallback = (base, override) => {
   if (Array.isArray(base)) {
@@ -72,6 +74,7 @@ export default function App() {
   const [formData, setFormData] = useState({ name: '', email: '', topic: '', message: '' });
   const [formErrors, setFormErrors] = useState({});
   const [touchedFields, setTouchedFields] = useState({});
+  const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '' });
   const closeButtonRef = useRef(null);
   const translationCache = useRef({});
 
@@ -255,31 +258,57 @@ export default function App() {
     setFormErrors(validateForm(formData));
   };
 
-  const buildMailtoLink = (data) => {
-    const recipient = translations?.contact?.mailto?.recipient || DEFAULT_MAIL_RECIPIENT;
-    const subjectPrefix = translations?.contact?.mailto?.subject || 'New inquiry';
-    const topic = data.topic || translations?.contact?.options?.[0] || '';
-    const subject = encodeURIComponent(`${subjectPrefix} ${topic}`.trim());
-    const body = encodeURIComponent([
-      `${t.contact.form.name}: ${data.name}`,
-      `${t.contact.form.email}: ${data.email}`,
-      `${t.contact.form.message}:`,
-      '',
-      data.message,
-    ].join('\n'));
-
-    return `mailto:${recipient}?subject=${subject}&body=${body}`;
-  };
-
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const validation = validateForm(formData);
     setTouchedFields({ name: true, email: true, topic: true, message: true });
     setFormErrors(validation);
+    setSubmissionState({ status: 'idle', message: '' });
 
-    if (Object.keys(validation).length === 0) {
-      window.location.href = buildMailtoLink(formData);
+    if (Object.keys(validation).length > 0) return;
+
+    if (!WEB3FORMS_ACCESS_KEY) {
+      setSubmissionState({ status: 'error', message: t.contact.submission.misconfigured });
+      return;
+    }
+
+    const formPayload = new FormData();
+    formPayload.append('access_key', WEB3FORMS_ACCESS_KEY);
+    formPayload.append('from_name', formData.name.trim());
+    formPayload.append('email', formData.email.trim());
+    formPayload.append('message', formData.message.trim());
+    formPayload.append(
+      'subject',
+      `${translations?.contact?.mailto?.subject || 'New inquiry:'} ${formData.topic || ''}`.trim()
+    );
+    formPayload.append('topic', formData.topic || '');
+    formPayload.append(
+      'recipient',
+      import.meta.env.VITE_CONTACT_EMAIL || translations?.contact?.mailto?.recipient || DEFAULT_MAIL_RECIPIENT
+    );
+
+    setSubmissionState({ status: 'submitting', message: '' });
+
+    try {
+      const response = await fetch(WEB3FORMS_ENDPOINT, {
+        method: 'POST',
+        body: formPayload,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Submission failed');
+      }
+
+      setSubmissionState({ status: 'success', message: t.contact.submission.success });
+      setFormData({ name: '', email: '', topic: translations?.contact?.options?.[0] || '', message: '' });
+      setTouchedFields({});
+      setFormErrors({});
+    } catch (error) {
+      console.error(error);
+      setSubmissionState({ status: 'error', message: t.contact.submission.error });
     }
   };
 
@@ -428,8 +457,8 @@ export default function App() {
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-[#12100E]/60 z-10 mix-blend-multiply"></div>
-          <img
-            src={assetUrl('images/hero.jpg')}
+            <img
+            src={assetUrl('images/hero.svg')}
             alt="Studio"
             className="w-full h-full object-cover object-center opacity-70"
           />
@@ -656,9 +685,22 @@ export default function App() {
               </div>
             </div>
             <div className="text-center pt-8">
-              <button type="submit" className="px-10 py-3 bg-[#E7E5E4] text-[#12100E] font-bold tracking-[0.2em] uppercase hover:bg-[#C5A059] hover:text-white transition-colors duration-300 text-[10px]">
+              <button
+                type="submit"
+                disabled={submissionState.status === 'submitting'}
+                className="px-10 py-3 bg-[#E7E5E4] text-[#12100E] font-bold tracking-[0.2em] uppercase hover:bg-[#C5A059] hover:text-white transition-colors duration-300 text-[10px] disabled:opacity-60 disabled:cursor-not-allowed"
+              >
                 {t.contact.form.submit}
               </button>
+              {submissionState.message && (
+                <p
+                  role="status"
+                  aria-live="polite"
+                  className={`mt-3 text-xs ${submissionState.status === 'success' ? 'text-green-300' : 'text-red-300'}`}
+                >
+                  {submissionState.message}
+                </p>
+              )}
             </div>
           </form>
 
