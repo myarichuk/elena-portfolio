@@ -1,69 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Menu, 
-  X, 
-  ChevronDown, 
-  Instagram, 
-  Twitter, 
-  ChevronLeft, 
+import {
+  Menu,
+  X,
+  ChevronDown,
+  Instagram,
+  Twitter,
+  ChevronLeft,
   ChevronRight,
   Globe,
   Mail,
   Palette,
   Calculator
 } from 'lucide-react';
-
-const artworks = [
-  {
-    id: 1,
-    title: "Weekend Study",
-    category: "oil",
-    src: "https://images.unsplash.com/photo-1579783902614-a3fb39279c0f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    medium: "Oil on Canvas",
-    details: "2023"
-  },
-  {
-    id: 2,
-    title: "Evening Texture",
-    category: "abstract",
-    src: "https://images.unsplash.com/photo-1541963463532-d68292c34b19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    medium: "Mixed Media",
-    details: "2023"
-  },
-  {
-    id: 3,
-    title: "Sister",
-    category: "portrait",
-    src: "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    medium: "Acrylic on Wood",
-    details: "Private Collection"
-  },
-  {
-    id: 4,
-    title: "Anatomy Practice",
-    category: "sketch",
-    src: "https://images.unsplash.com/photo-1615800098779-1be8287d4554?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    medium: "Charcoal",
-    details: "Sketchbook IV",
-    grayscale: true
-  },
-  {
-    id: 5,
-    title: "Still Life #42",
-    category: "oil",
-    src: "https://images.unsplash.com/photo-1549887552-93f8efb87dfb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    medium: "Oil on Canvas",
-    details: "2022"
-  },
-  {
-    id: 6,
-    title: "After Tax Season",
-    category: "abstract",
-    src: "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    medium: "Acrylic Pour",
-    details: "2024"
-  }
-];
 
 const translations = {
   en: {
@@ -156,10 +104,45 @@ export default function App() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lang, setLang] = useState('en');
+  const [artworks, setArtworks] = useState([]);
+  const [artworksLoading, setArtworksLoading] = useState(true);
+  const [artworksError, setArtworksError] = useState(null);
 
   // Helper to get text
   const t = translations[lang];
   const isRTL = lang === 'he';
+
+  // Load artworks from static JSON so content stays editable outside the bundle
+  useEffect(() => {
+    let isMounted = true;
+
+    fetch('/artworks.json')
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to load artworks');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (isMounted) {
+          setArtworks(data);
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setArtworksError(err.message);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setArtworksLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Load Fonts & Handle Direction
   useEffect(() => {
@@ -188,12 +171,13 @@ export default function App() {
   }, [lang, isRTL]);
 
   // Filter Logic
-  const filteredArtworks = activeFilter === 'all' 
-    ? artworks 
-    : artworks.filter(art => art.category === activeFilter);
+  const filteredArtworks = artworks.filter((art) =>
+    activeFilter === 'all' || art.category === activeFilter
+  );
 
   // Lightbox Logic
   const openLightbox = (index) => {
+    if (!filteredArtworks.length) return;
     setCurrentImageIndex(index);
     setLightboxOpen(true);
     document.body.style.overflow = 'hidden';
@@ -206,11 +190,13 @@ export default function App() {
 
   const nextImage = (e) => {
     e.stopPropagation();
+    if (!filteredArtworks.length) return;
     setCurrentImageIndex((prev) => (prev + 1) % filteredArtworks.length);
   };
 
   const prevImage = (e) => {
     e.stopPropagation();
+    if (!filteredArtworks.length) return;
     setCurrentImageIndex((prev) => (prev - 1 + filteredArtworks.length) % filteredArtworks.length);
   };
 
@@ -373,15 +359,27 @@ export default function App() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredArtworks.map((art, index) => (
-              <div 
+            {artworksLoading && (
+              <p className="col-span-full text-center text-[#A8A29E]">Loading artworks...</p>
+            )}
+
+            {artworksError && (
+              <p className="col-span-full text-center text-red-300">Failed to load artworks: {artworksError}</p>
+            )}
+
+            {!artworksLoading && !artworksError && filteredArtworks.length === 0 && (
+              <p className="col-span-full text-center text-[#A8A29E]">No artworks available.</p>
+            )}
+
+            {!artworksLoading && !artworksError && filteredArtworks.map((art, index) => (
+              <div
                 key={art.id}
                 onClick={() => openLightbox(index)}
                 className="group relative aspect-[4/5] cursor-pointer overflow-hidden bg-[#1C1A18] rounded-sm shadow-lg animate-fade-in-up"
               >
-                <img 
-                  src={art.src} 
-                  alt={art.title} 
+                <img
+                  src={art.src}
+                  alt={art.title}
                   className={`w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105 opacity-90 group-hover:opacity-100 ${art.grayscale ? 'grayscale' : ''}`}
                 />
                 <div className="absolute inset-0 bg-[#12100E]/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center p-6 text-center">
@@ -495,8 +493,8 @@ export default function App() {
       </footer>
 
       {/* Lightbox Modal */}
-      {lightboxOpen && (
-        <div 
+      {lightboxOpen && filteredArtworks.length > 0 && (
+        <div
           className="fixed inset-0 z-[60] bg-[#12100E]/98 flex items-center justify-center p-4 animate-fade-in-up"
           onClick={closeLightbox}
         >
