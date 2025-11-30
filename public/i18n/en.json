@@ -1,5 +1,5 @@
 {
-  "nav": { "works": "Portfolio", "about": "About Elena", "contact": "Contact" },
+  "nav": { "works": "Portfolio", "about": "About Yelena", "contact": "Contact" },
   "hero": {
     "subtitle": "Accountant by Day, Painter Soul",
     "title1": "Balance &",
@@ -14,12 +14,14 @@
   },
   "artist": {
     "label": "The Dual Life",
+    "name": "Yelena Yarichuk",
     "bio1": "My days are defined by rows, columns, and absolute precision. Painting is my rebellion against the grid.",
-    "bio2": "I am Elena Yarichuk. I don't paint for galleries or applause. I paint to find the colors that numbers can't express."
+    "bio2": "I am Yelena Yarichuk. I don't paint for galleries or applause. I paint to find the colors that numbers can't express."
   },
   "contact": {
     "title": "Say Hello",
     "desc": "I am rarely on social media, but I always appreciate a thoughtful message about art or life.",
+    "emailFallback": "No form? Email me directly",
     "form": { "name": "Name", "email": "Email", "message": "Message", "submit": "Send" },
     "options": ["Art Inquiry", "Just Saying Hi"],
     "errors": {
@@ -35,5 +37,5 @@
     },
     "mailto": { "recipient": "hello@elenayarichuk.com", "subject": "New inquiry:" }
   },
-  "footer": { "copyright": "© 2024 Elena Yarichuk." }
+  "footer": { "copyright": "© 2024 Yelena Yarichuk." }
 }
