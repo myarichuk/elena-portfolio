@@ -258,6 +258,11 @@ export default function App() {
     setFormErrors(validateForm(formData));
   };
 
+  const contactEmail =
+    import.meta.env.VITE_CONTACT_EMAIL || translations?.contact?.mailto?.recipient || DEFAULT_MAIL_RECIPIENT;
+  const mailtoSubject = translations?.contact?.mailto?.subject || 'New inquiry:';
+  const mailtoLink = `mailto:${contactEmail}?subject=${encodeURIComponent(mailtoSubject)}`;
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -269,6 +274,13 @@ export default function App() {
     if (Object.keys(validation).length > 0) return;
 
     if (!WEB3FORMS_ACCESS_KEY) {
+      const fallbackUrl = `mailto:${contactEmail}?subject=${encodeURIComponent(
+        `${mailtoSubject} ${formData.topic || ''}`.trim()
+      )}&body=${encodeURIComponent(
+        `${formData.message}\n\n${t.contact.form.name}: ${formData.name}\n${t.contact.form.email}: ${formData.email}`.trim()
+      )}`;
+
+      window.location.href = fallbackUrl;
       setSubmissionState({ status: 'error', message: t.contact.submission.misconfigured });
       return;
     }
@@ -283,10 +295,7 @@ export default function App() {
       `${translations?.contact?.mailto?.subject || 'New inquiry:'} ${formData.topic || ''}`.trim()
     );
     formPayload.append('topic', formData.topic || '');
-    formPayload.append(
-      'recipient',
-      import.meta.env.VITE_CONTACT_EMAIL || translations?.contact?.mailto?.recipient || DEFAULT_MAIL_RECIPIENT
-    );
+    formPayload.append('recipient', contactEmail);
 
     setSubmissionState({ status: 'submitting', message: '' });
 
@@ -399,7 +408,7 @@ export default function App() {
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center gap-2">
               <span className="font-serif text-2xl italic font-medium tracking-wide text-white hover:text-[#C5A059] transition-colors">
-                Elena.
+                {t.artist.name}
               </span>
             </div>
 
@@ -577,7 +586,7 @@ export default function App() {
           </div>
           
           <h4 className="text-[#C5A059] uppercase tracking-[0.2em] text-xs mb-4">{t.artist.label}</h4>
-          <h2 className="font-serif text-4xl md:text-5xl mb-8 italic text-[#E7E5E4]">Elena Yarichuk</h2>
+          <h2 className="font-serif text-4xl md:text-5xl mb-8 italic text-[#E7E5E4]">{t.artist.name}</h2>
           <div className="max-w-2xl mx-auto">
             <p className="text-[#A8A29E] mb-6 leading-relaxed text-lg font-light">
               {t.artist.bio1}
@@ -600,8 +609,16 @@ export default function App() {
       {/* Contact Section */}
       <section id="contact" className="py-24 bg-[#12100E] border-t border-white/5">
         <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-serif text-3xl md:text-4xl mb-4 italic">{t.contact.title}</h2>
-          <p className="text-[#A8A29E] mb-12 font-light text-sm">{t.contact.desc}</p>
+          <h2 className="font-serif text-3xl md:text-4xl mb-2 italic">{t.contact.title}</h2>
+          <p className="text-[#A8A29E] mb-3 font-light text-sm">{t.contact.desc}</p>
+          <p className="text-[#C5A059] text-[10px] uppercase tracking-[0.25em] mb-1">{t.contact.emailFallback}</p>
+          <a
+            href={mailtoLink}
+            className="text-[#E7E5E4] font-semibold underline underline-offset-4 hover:text-[#C5A059] transition-colors"
+          >
+            {contactEmail}
+          </a>
+          <div className="h-6" aria-hidden="true" />
           
           <form className={`space-y-6 ${isRTL ? 'text-right' : 'text-left'}`} noValidate onSubmit={handleSubmit}>
             <div className="space-y-6">
@@ -714,7 +731,7 @@ export default function App() {
       {/* Footer */}
       <footer className="bg-[#12100E] py-10 border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 flex flex-col items-center">
-          <p className="font-serif italic text-xl text-[#57534E] mb-2">Elena.</p>
+          <p className="font-serif italic text-xl text-[#57534E] mb-2">{t.artist.name}</p>
           <p className="text-[#44403C] text-[10px] uppercase tracking-[0.2em]">
             {t.footer.copyright}
           </p>
