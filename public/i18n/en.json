@@ -1,0 +1,27 @@
+{
+  "nav": { "works": "Portfolio", "about": "About Elena", "contact": "Contact" },
+  "hero": {
+    "subtitle": "Accountant by Day, Painter Soul",
+    "title1": "Balance &",
+    "title2": "Color",
+    "desc": "Finding the space between the rigid lines of a spreadsheet and the fluidity of oil paint. A personal collection.",
+    "cta": "View Collection"
+  },
+  "gallery": {
+    "title": "Selected Works",
+    "filters": { "all": "All Works", "oil": "Oils", "abstract": "Abstract", "portrait": "Portraits", "sketch": "Charcoal" },
+    "archive": "View Archive"
+  },
+  "artist": {
+    "label": "The Dual Life",
+    "bio1": "My days are defined by rows, columns, and absolute precision. Painting is my rebellion against the grid.",
+    "bio2": "I am Elena Yarichuk. I don't paint for galleries or applause. I paint to find the colors that numbers can't express."
+  },
+  "contact": {
+    "title": "Say Hello",
+    "desc": "I am rarely on social media, but I always appreciate a thoughtful message about art or life.",
+    "form": { "name": "Name", "email": "Email", "message": "Message", "submit": "Send" },
+    "options": ["Art Inquiry", "Just Saying Hi"]
+  },
+  "footer": { "copyright": "© 2024 Elena Yarichuk." }
+}
