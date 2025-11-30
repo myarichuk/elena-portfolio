@@ -49,12 +49,28 @@ const resolveImageSrc = (src, { upscale } = {}) => {
 };
 
 const fetchLocale = async (locale) => {
-  const response = await fetch(assetUrl(`i18n/${locale}.json`));
-  if (!response.ok) {
-    throw new Error(`Failed to load ${locale} translations`);
+  const attempted = new Set();
+  const candidates = [assetUrl(`i18n/${locale}.json`), `/i18n/${locale}.json`];
+  let lastError;
+
+  for (const url of candidates) {
+    if (attempted.has(url)) continue;
+    attempted.add(url);
+
+    try {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      lastError = error;
+      console.warn(`Failed to load ${locale} translations from ${url}`, error);
+    }
   }
 
-  return response.json();
+  throw new Error(`Failed to load ${locale} translations${lastError ? ` (${lastError.message})` : ''}`);
 };
 
 export default function App() {
