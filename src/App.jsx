@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Menu, 
-  X, 
-  ChevronDown, 
-  Instagram, 
-  Twitter, 
-  ChevronLeft, 
+  Menu,
+  X,
+  ChevronDown,
+  Instagram,
+  ChevronLeft,
   ChevronRight,
   Globe,
   Mail,
@@ -13,105 +12,94 @@ import {
   Calculator
 } from 'lucide-react';
 
-const translations = {
-  en: {
-    nav: { works: 'Portfolio', about: 'About Elena', contact: 'Contact' },
-    hero: {
-      subtitle: 'Accountant by Day, Painter Soul',
-      title1: 'Balance &',
-      title2: 'Color',
-      desc: 'Finding the space between the rigid lines of a spreadsheet and the fluidity of oil paint. A personal collection.',
-      cta: 'View Collection'
-    },
-    gallery: {
-      title: 'Selected Works',
-      filters: { all: 'All Works', oil: 'Oils', abstract: 'Abstract', portrait: 'Portraits', sketch: 'Charcoal' },
-      archive: 'View Archive'
-    },
-    artist: {
-      label: 'The Dual Life',
-      bio1: 'My days are defined by rows, columns, and absolute precision. Painting is my rebellion against the grid.',
-      bio2: 'I am Elena Yarichuk. I don\'t paint for galleries or applause. I paint to find the colors that numbers can\'t express.',
-    },
-    contact: {
-      title: 'Say Hello',
-      desc: 'I am rarely on social media, but I always appreciate a thoughtful message about art or life.',
-      form: { name: 'Name', email: 'Email', message: 'Message', submit: 'Send' },
-      options: ['Art Inquiry', 'Just Saying Hi']
-    },
-    footer: { copyright: '© 2024 Elena Yarichuk.' }
-  },
-  ru: {
-    nav: { works: 'Портфолио', about: 'Обо мне', contact: 'Контакты' },
-    hero: {
-      subtitle: 'Бухгалтер днем, Художник в душе',
-      title1: 'Баланс и',
-      title2: 'Цвет',
-      desc: 'Поиск пространства между строгими линиями электронных таблиц и плавностью масляной краски. Личная коллекция.',
-      cta: 'Смотреть Коллекцию'
-    },
-    gallery: {
-      title: 'Избранное',
-      filters: { all: 'Все', oil: 'Масло', abstract: 'Абстракция', portrait: 'Портреты', sketch: 'Уголь' },
-      archive: 'Архив'
-    },
-    artist: {
-      label: 'Двойная Жизнь',
-      bio1: 'Мои дни определяются строками, столбцами и абсолютной точностью. Живопись — это мой бунт против сетки.',
-      bio2: 'Елена Ярийчук. Я не пишу для галерей или аплодисментов. Я пишу, чтобы найти цвета, которые не могут выразить цифры.',
-    },
-    contact: {
-      title: 'Напишите мне',
-      desc: 'Я редко бываю в соцсетях, но всегда ценю вдумчивые сообщения об искусстве или жизни.',
-      form: { name: 'Имя', email: 'Email', message: 'Сообщение', submit: 'Отправить' },
-      options: ['Вопрос об искусстве', 'Просто поздороваться']
-    },
-    footer: { copyright: '© 2025 Елена Ярийчук.' }
-  },
-  he: {
-    nav: { works: 'תיק עבודות', about: 'על ילנה', contact: 'צור קשר' },
-    hero: {
-      subtitle: 'רואת חשבון ביום, ציירת בנשמה',
-      title1: 'איזון ו',
-      title2: 'צבע',
-      desc: 'חיפוש המרחב שבין הקווים הנוקשים של הגיליונות האלקטרוניים לבין הזרימה של צבע השמן. אוסף אישי.',
-      cta: 'לצפייה באוסף'
-    },
-    gallery: {
-      title: 'עבודות נבחרות',
-      filters: { all: 'הכל', oil: 'שמן', abstract: 'מופשט', portrait: 'דיוקנאות', sketch: 'פחם' },
-      archive: 'ארכיון'
-    },
-    artist: {
-      label: 'חיים כפולים',
-      bio1: 'הימים שלי מוגדרים על ידי שורות, עמודות ודיוק מוחלט. הציור הוא המרד שלי נגד הרשת.',
-      bio2: 'אני ילנה יריצ\'וק. אני לא מציירת בשביל גלריות או מחיאות כפיים. אני מציירת כדי למצוא את הצבעים שהמספרים לא יכולים לבטא.',
-    },
-    contact: {
-      title: 'תגידו היי!',
-      desc: 'אני ממעטת להיות ברשתות החברתיות, אבל תמיד מעריכה הודעה מחשבתית על אמנות או החיים.',
-      form: { name: 'שם', email: 'אימייל', message: 'הודעה', submit: 'שלח' },
-      options: ['שאלה על אמנות', 'סתם להגיד היי']
-    },
-    footer: { copyright: '© 2024 ילנה יריצ\'וק.' }
+const mergeWithFallback = (base, override) => {
+  if (Array.isArray(base)) {
+    return Array.isArray(override) ? override : base;
   }
+
+  if (typeof base !== 'object' || base === null) {
+    return override ?? base;
+  }
+
+  return Object.keys(base).reduce((acc, key) => {
+    acc[key] = mergeWithFallback(base[key], override?.[key]);
+    return acc;
+  }, {});
+};
+
+const fetchLocale = async (locale) => {
+  const response = await fetch(`/i18n/${locale}.json`);
+  if (!response.ok) {
+    throw new Error(`Failed to load ${locale} translations`);
+  }
+
+  return response.json();
 };
 
 export default function App() {
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [scrolled, setScrolled] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lang, setLang] = useState('en');
+  const [translations, setTranslations] = useState(null);
+  const [translationsError, setTranslationsError] = useState(null);
+  const [translationsLoading, setTranslationsLoading] = useState(true);
   const [artworks, setArtworks] = useState([]);
   const [artworksLoading, setArtworksLoading] = useState(true);
   const [artworksError, setArtworksError] = useState(null);
   const closeButtonRef = useRef(null);
+  const translationCache = useRef({});
 
   // Helper to get text
-  const t = translations[lang];
+  const t = translations || translationCache.current.en || {};
   const isRTL = lang === 'he';
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadTranslations = async () => {
+      setTranslationsLoading(true);
+      setTranslationsError(null);
+
+      try {
+        if (!translationCache.current.en) {
+          translationCache.current.en = await fetchLocale('en');
+        }
+
+        const targetLocale =
+          lang === 'en'
+            ? translationCache.current.en
+            : translationCache.current[lang] || (translationCache.current[lang] = await fetchLocale(lang));
+
+        const mergedTranslations = mergeWithFallback(translationCache.current.en, targetLocale);
+
+        if (isMounted) {
+          setTranslations(mergedTranslations);
+        }
+      } catch (error) {
+        console.error(error);
+        if (isMounted) {
+          setTranslationsError(error.message);
+          if (translationCache.current.en) {
+            setTranslations(translationCache.current.en);
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setTranslationsLoading(false);
+        }
+      }
+    };
+
+    loadTranslations();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [lang]);
 
   // Load artworks from static JSON so content stays editable outside the bundle
   useEffect(() => {
@@ -232,9 +220,30 @@ export default function App() {
     else setLang('en');
   };
 
+  if (!translations && translationsLoading) {
+    return (
+      <div className="min-h-screen bg-[#12100E] text-[#E7E5E4] flex items-center justify-center">
+        <p className="text-sm text-[#C5A059]">Loading translations...</p>
+      </div>
+    );
+  }
+
+  if (!translations) {
+    return (
+      <div className="min-h-screen bg-[#12100E] text-[#E7E5E4] flex items-center justify-center">
+        <p className="text-sm text-red-200">Unable to load translations. Please refresh the page.</p>
+      </div>
+    );
+  }
+
   return (
     <div className={`bg-[#12100E] text-[#E7E5E4] font-sans selection:bg-[#C5A059] selection:text-black min-h-screen ${isRTL ? 'font-hebrew-sans' : ''}`}>
-      
+
+      {translationsError && (
+        <div className="bg-red-900/60 text-red-100 text-center text-sm py-3 px-4">
+          Using fallback translations. {translationsError}
+        </div>
+      )}
       {/* Texture Overlay */}
       <div 
         className="fixed inset-0 pointer-events-none z-[60] opacity-[0.05]"
