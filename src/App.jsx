@@ -14,7 +14,7 @@ import {
 
 const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
 const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || '17e9fbc8-bee6-47c3-88a8-4121afd5a48b';
-const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY || '';
+const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY || 'eec02a16-0576-47a0-9400-c080c842156a';
 
 const mergeWithFallback = (base, override) => {
   if (Array.isArray(base)) {
