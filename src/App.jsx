@@ -12,9 +12,8 @@ import {
   Calculator
 } from 'lucide-react';
 
-const DEFAULT_MAIL_RECIPIENT = 'hello@elenayarichuk.com';
 const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
-const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+const WEB3FORMS_ACCESS_KEY = '17e9fbc8-bee6-47c3-88a8-4121afd5a48b';
 
 const mergeWithFallback = (base, override) => {
   if (Array.isArray(base)) {
