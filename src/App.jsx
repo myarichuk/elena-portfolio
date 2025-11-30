@@ -27,8 +27,14 @@ const mergeWithFallback = (base, override) => {
   }, {});
 };
 
+const assetUrl = (path) => {
+  const base = import.meta.env.BASE_URL ?? '/';
+  const normalizedBase = base.endsWith('/') ? base : `${base}/`;
+  return `${normalizedBase}${path.replace(/^\/+/g, '')}`;
+};
+
 const fetchLocale = async (locale) => {
-  const response = await fetch(`/i18n/${locale}.json`);
+  const response = await fetch(assetUrl(`i18n/${locale}.json`));
   if (!response.ok) {
     throw new Error(`Failed to load ${locale} translations`);
   }
@@ -105,7 +111,7 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
 
-    fetch('/artworks.json')
+    fetch(assetUrl('artworks.json'))
       .then((response) => {
         if (!response.ok) {
           throw new Error('Failed to load artworks');
