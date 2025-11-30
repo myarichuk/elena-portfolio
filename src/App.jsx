@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Menu,
-  X,
-  ChevronDown,
-  Instagram,
-  Twitter,
-  ChevronLeft,
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Menu, 
+  X, 
+  ChevronDown, 
+  Instagram, 
+  Twitter, 
+  ChevronLeft, 
   ChevronRight,
   Globe,
   Mail,
@@ -107,6 +107,7 @@ export default function App() {
   const [artworks, setArtworks] = useState([]);
   const [artworksLoading, setArtworksLoading] = useState(true);
   const [artworksError, setArtworksError] = useState(null);
+  const closeButtonRef = useRef(null);
 
   // Helper to get text
   const t = translations[lang];
@@ -199,6 +200,31 @@ export default function App() {
     if (!filteredArtworks.length) return;
     setCurrentImageIndex((prev) => (prev - 1 + filteredArtworks.length) % filteredArtworks.length);
   };
+
+  // Lightbox keyboard handling and focus management
+  useEffect(() => {
+    if (!lightboxOpen) return;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeLightbox();
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        (isRTL ? nextImage : prevImage)();
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        (isRTL ? prevImage : nextImage)();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    closeButtonRef.current?.focus();
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [lightboxOpen, isRTL]);
 
   const toggleLang = () => {
     if (lang === 'en') setLang('ru');
@@ -498,7 +524,11 @@ export default function App() {
           className="fixed inset-0 z-[60] bg-[#12100E]/98 flex items-center justify-center p-4 animate-fade-in-up"
           onClick={closeLightbox}
         >
-          <button onClick={closeLightbox} className={`absolute top-6 ${isRTL ? 'left-6' : 'right-6'} text-[#78716C] hover:text-[#C5A059] z-50 p-2 transition-colors`}>
+          <button
+            ref={closeButtonRef}
+            onClick={closeLightbox}
+            className={`absolute top-6 ${isRTL ? 'left-6' : 'right-6'} text-[#78716C] hover:text-[#C5A059] z-50 p-2 transition-colors`}
+          >
             <X size={32} />
           </button>
           
