@@ -28,6 +28,11 @@
       "emailInvalid": "Enter a valid email address.",
       "messageRequired": "Tell me a bit about what you would like to discuss."
     },
+    "submission": {
+      "success": "Thank you! I'll reply soon.",
+      "error": "Something went wrong sending your message. Please try again shortly.",
+      "misconfigured": "Contact form is not configured. Please email me directly."
+    },
     "mailto": { "recipient": "hello@elenayarichuk.com", "subject": "New inquiry:" }
   },
   "footer": { "copyright": "© 2024 Elena Yarichuk." }

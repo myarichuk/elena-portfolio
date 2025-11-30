@@ -28,6 +28,11 @@
       "emailInvalid": "נא להזין אימייל תקין.",
       "messageRequired": "ספרו לי בקצרה על מה תרצו לדבר."
     },
+    "submission": {
+      "success": "תודה! אחזור אליך בהקדם.",
+      "error": "שליחת הטופס נכשלה. נסה שוב מאוחר יותר.",
+      "misconfigured": "הטופס אינו מוגדר. אנא פנה אליי במייל."
+    },
     "mailto": { "recipient": "hello@elenayarichuk.com", "subject": "פנייה חדשה:" }
   },
   "footer": { "copyright": "© 2024 ילנה יריצ'וק." }
