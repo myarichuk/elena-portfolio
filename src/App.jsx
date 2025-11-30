@@ -49,14 +49,12 @@ const resolveImageSrc = (src, { upscale } = {}) => {
 };
 
 const fetchLocale = async (locale) => {
-  const attempted = new Set();
-  const candidates = [assetUrl(`i18n/${locale}.json`), `/i18n/${locale}.json`];
+  const originUrl = new URL(`i18n/${locale}.json`, window.location.origin).toString();
+  const baseUrl = assetUrl(`i18n/${locale}.json`);
+  const candidates = originUrl === baseUrl ? [originUrl] : [originUrl, baseUrl];
   let lastError;
 
   for (const url of candidates) {
-    if (attempted.has(url)) continue;
-    attempted.add(url);
-
     try {
       const response = await fetch(url, { cache: 'no-store' });
       if (!response.ok) {
