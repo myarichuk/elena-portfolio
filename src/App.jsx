@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 
 const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
-const WEB3FORMS_ACCESS_KEY = '17e9fbc8-bee6-47c3-88a8-4121afd5a48b';
+const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || '17e9fbc8-bee6-47c3-88a8-4121afd5a48b';
+const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY || '';
 
 const mergeWithFallback = (base, override) => {
   if (Array.isArray(base)) {
@@ -88,7 +89,12 @@ export default function App() {
   const [formErrors, setFormErrors] = useState({});
   const [touchedFields, setTouchedFields] = useState({});
   const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '' });
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaError, setCaptchaError] = useState('');
+  const [captchaReady, setCaptchaReady] = useState(false);
   const closeButtonRef = useRef(null);
+  const captchaRef = useRef(null);
+  const captchaWidgetId = useRef(null);
   const translationCache = useRef({});
 
   // Helper to get text
@@ -206,6 +212,66 @@ export default function App() {
     document.documentElement.lang = lang;
   }, [lang, isRTL]);
 
+  useEffect(() => {
+    if (!HCAPTCHA_SITE_KEY || typeof window === 'undefined') return;
+
+    const handleLoad = () => setCaptchaReady(true);
+    const handleError = () =>
+      setCaptchaError('Captcha could not load. Please refresh and try again.');
+
+    const existingScript = document.getElementById('hcaptcha-script');
+
+    if (existingScript) {
+      existingScript.addEventListener('load', handleLoad);
+      existingScript.addEventListener('error', handleError);
+      if (window.hcaptcha) {
+        setCaptchaReady(true);
+      }
+
+      return () => {
+        existingScript.removeEventListener('load', handleLoad);
+        existingScript.removeEventListener('error', handleError);
+      };
+    }
+
+    const script = document.createElement('script');
+    script.id = 'hcaptcha-script';
+    script.src = 'https://js.hcaptcha.com/1/api.js?render=explicit';
+    script.async = true;
+    script.defer = true;
+    script.onload = handleLoad;
+    script.onerror = handleError;
+    document.body.appendChild(script);
+
+    return () => {
+      script.onload = null;
+      script.onerror = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!captchaReady || !captchaRef.current || typeof window === 'undefined' || !window.hcaptcha || !HCAPTCHA_SITE_KEY) {
+      return;
+    }
+
+    if (captchaWidgetId.current !== null) {
+      window.hcaptcha.reset(captchaWidgetId.current);
+      return;
+    }
+
+    captchaWidgetId.current = window.hcaptcha.render(captchaRef.current, {
+      sitekey: HCAPTCHA_SITE_KEY,
+      theme: 'dark',
+      callback: (token) => {
+        setCaptchaToken(token);
+        setCaptchaError('');
+      },
+      'expired-callback': () => setCaptchaToken(''),
+      'error-callback': () =>
+        setCaptchaError('Captcha challenge failed to load. Please try again.'),
+    });
+  }, [captchaReady]);
+
   // Filter Logic
   const filteredArtworks = artworks.filter((art) =>
     activeFilter === 'all' || art.category === activeFilter
@@ -280,12 +346,27 @@ export default function App() {
     setTouchedFields({ name: true, email: true, topic: true, message: true });
     setFormErrors(validation);
     setSubmissionState({ status: 'idle', message: '' });
+    setCaptchaError('');
 
     if (Object.keys(validation).length > 0) return;
 
     if (!WEB3FORMS_ACCESS_KEY) {
       console.error('Missing Web3Forms access key (VITE_WEB3FORMS_ACCESS_KEY).');
       setSubmissionState({ status: 'error', message: t.contact.submission.misconfigured });
+      return;
+    }
+
+    if (!HCAPTCHA_SITE_KEY) {
+      console.error('Missing hCaptcha site key (VITE_HCAPTCHA_SITE_KEY).');
+      setSubmissionState({ status: 'error', message: t.contact.submission.misconfigured });
+      return;
+    }
+
+    if (!captchaToken) {
+      setCaptchaError(t.contact.errors.captchaRequired);
+      if (window?.hcaptcha && captchaWidgetId.current !== null) {
+        window.hcaptcha.execute(captchaWidgetId.current);
+      }
       return;
     }
 
@@ -296,7 +377,8 @@ export default function App() {
     formPayload.append('message', formData.message.trim());
     formPayload.append('subject', `${submissionSubject} ${formData.topic || ''}`.trim());
     formPayload.append('topic', formData.topic || '');
-    
+    formPayload.append('h-captcha-response', captchaToken);
+
     setSubmissionState({ status: 'submitting', message: '' });
 
     try {
@@ -315,6 +397,10 @@ export default function App() {
       setFormData({ name: '', email: '', topic: translations?.contact?.options?.[0] || '', message: '' });
       setTouchedFields({});
       setFormErrors({});
+      setCaptchaToken('');
+      if (window?.hcaptcha && captchaWidgetId.current !== null) {
+        window.hcaptcha.reset(captchaWidgetId.current);
+      }
     } catch (error) {
       console.error(error);
       setSubmissionState({ status: 'error', message: t.contact.submission.error });
@@ -608,76 +694,132 @@ export default function App() {
 
       {/* Contact Section */}
       <section id="contact" className="py-24 bg-[#12100E] border-t border-white/5">
-        <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-serif text-3xl md:text-4xl mb-2 italic">{t.contact.title}</h2>
-          <p className="text-[#A8A29E] mb-3 font-light text-sm">{t.contact.desc}</p>
-          <form className={`space-y-6 ${isRTL ? 'text-right' : 'text-left'}`} noValidate onSubmit={handleSubmit}>
-            <div className="space-y-6">
-              <div>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={handleInputChange('name')}
-                  onBlur={handleBlur('name')}
-                  aria-invalid={Boolean(formErrors.name)}
-                  aria-describedby={formErrors.name ? 'contact-name-error' : undefined}
-                  className="w-full bg-transparent border-b border-white/20 py-3 text-[#E7E5E4] focus:outline-none focus:border-[#C5A059] transition-colors font-light placeholder-[#44403C] text-sm"
-                  placeholder={t.contact.form.name}
-                />
-                {formErrors.name && (
-                  <p
-                    id="contact-name-error"
-                    role="alert"
-                    aria-live="polite"
-                    className="mt-2 text-xs text-red-300"
-                  >
-                    {formErrors.name}
-                  </p>
-                )}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto">
+            <h2 className="font-serif text-3xl md:text-4xl mb-2 italic text-[#E7E5E4]">{t.contact.title}</h2>
+            <p className="text-[#A8A29E] font-light text-sm leading-relaxed">{t.contact.desc}</p>
+          </div>
+
+          <div className={`grid gap-8 lg:grid-cols-2 items-start mt-10 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 shadow-2xl space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-[#1A1714] text-[11px] uppercase tracking-[0.25em] text-[#C5A059]">
+                <Palette size={14} />
+                <span className="font-semibold">{t.nav.contact}</span>
               </div>
-              <div>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange('email')}
-                  onBlur={handleBlur('email')}
-                  aria-invalid={Boolean(formErrors.email)}
-                  aria-describedby={formErrors.email ? 'contact-email-error' : undefined}
-                  className="w-full bg-transparent border-b border-white/20 py-3 text-[#E7E5E4] focus:outline-none focus:border-[#C5A059] transition-colors font-light placeholder-[#44403C] text-sm"
-                  placeholder={t.contact.form.email}
-                />
-                {formErrors.email && (
-                  <p
-                    id="contact-email-error"
-                    role="alert"
-                    aria-live="polite"
-                    className="mt-2 text-xs text-red-300"
+              <p className="text-[#E7E5E4] text-base leading-relaxed font-light">{t.contact.desc}</p>
+              <div className="flex flex-wrap gap-2">
+                {t.contact.options.map((opt) => (
+                  <span
+                    key={opt}
+                    className="px-3 py-2 rounded-lg border border-white/10 bg-[#1A1714] text-xs text-[#C5A059] uppercase tracking-[0.15em]"
                   >
-                    {formErrors.email}
-                  </p>
-                )}
+                    {opt}
+                  </span>
+                ))}
               </div>
-              <div>
+              <div className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-black/20">
+                <Mail className="text-[#C5A059]" size={18} />
+                <div>
+                  <p className="text-sm text-[#E7E5E4] font-semibold">{t.contact.mailto.recipient}</p>
+                  <p className="text-xs text-[#8A8178]">{t.contact.mailto.subject}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-[#78716C]">
+                <Calculator size={14} />
+                <span className="uppercase tracking-[0.2em]">{t.gallery.title}</span>
+              </div>
+            </div>
+
+            <form
+              className="rounded-2xl border border-white/10 bg-[#0F0D0B]/70 p-8 shadow-2xl space-y-5"
+              noValidate
+              onSubmit={handleSubmit}
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-xs uppercase tracking-[0.2em] text-[#78716C]" htmlFor="contact-name">
+                    {t.contact.form.name}
+                  </label>
+                  <input
+                    id="contact-name"
+                    type="text"
+                    value={formData.name}
+                    onChange={handleInputChange('name')}
+                    onBlur={handleBlur('name')}
+                    aria-invalid={Boolean(formErrors.name)}
+                    aria-describedby={formErrors.name ? 'contact-name-error' : undefined}
+                    className="w-full rounded-md bg-[#181512] border border-white/10 px-4 py-3 text-sm text-[#E7E5E4] placeholder-[#44403C] focus:border-[#C5A059] focus:outline-none focus:ring-1 focus:ring-[#C5A059]"
+                    placeholder={t.contact.form.name}
+                  />
+                  {formErrors.name && (
+                    <p
+                      id="contact-name-error"
+                      role="alert"
+                      aria-live="polite"
+                      className="text-xs text-red-300"
+                    >
+                      {formErrors.name}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs uppercase tracking-[0.2em] text-[#78716C]" htmlFor="contact-email">
+                    {t.contact.form.email}
+                  </label>
+                  <input
+                    id="contact-email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange('email')}
+                    onBlur={handleBlur('email')}
+                    aria-invalid={Boolean(formErrors.email)}
+                    aria-describedby={formErrors.email ? 'contact-email-error' : undefined}
+                    className="w-full rounded-md bg-[#181512] border border-white/10 px-4 py-3 text-sm text-[#E7E5E4] placeholder-[#44403C] focus:border-[#C5A059] focus:outline-none focus:ring-1 focus:ring-[#C5A059]"
+                    placeholder={t.contact.form.email}
+                  />
+                  {formErrors.email && (
+                    <p
+                      id="contact-email-error"
+                      role="alert"
+                      aria-live="polite"
+                      className="text-xs text-red-300"
+                    >
+                      {formErrors.email}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.2em] text-[#78716C]" htmlFor="contact-topic">
+                  {t.contact.form.topic || t.contact.form.subject || t.gallery.title}
+                </label>
                 <select
+                  id="contact-topic"
                   value={formData.topic}
                   onChange={handleInputChange('topic')}
                   onBlur={handleBlur('topic')}
-                  className="w-full bg-[#12100E] border-b border-white/20 py-3 text-[#A8A29E] focus:outline-none focus:border-[#C5A059] transition-colors font-light text-sm"
+                  className="w-full rounded-md bg-[#181512] border border-white/10 px-4 py-3 text-sm text-[#E7E5E4] focus:border-[#C5A059] focus:outline-none focus:ring-1 focus:ring-[#C5A059]"
                 >
                   {t.contact.options.map((opt) => (
                     <option key={opt}>{opt}</option>
                   ))}
                 </select>
               </div>
-              <div>
+
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.2em] text-[#78716C]" htmlFor="contact-message">
+                  {t.contact.form.message}
+                </label>
                 <textarea
+                  id="contact-message"
                   rows="4"
                   value={formData.message}
                   onChange={handleInputChange('message')}
                   onBlur={handleBlur('message')}
                   aria-invalid={Boolean(formErrors.message)}
                   aria-describedby={formErrors.message ? 'contact-message-error' : undefined}
-                  className="w-full bg-transparent border-b border-white/20 py-3 text-[#E7E5E4] focus:outline-none focus:border-[#C5A059] transition-colors font-light placeholder-[#44403C] text-sm"
+                  className="w-full rounded-md bg-[#181512] border border-white/10 px-4 py-3 text-sm text-[#E7E5E4] placeholder-[#44403C] focus:border-[#C5A059] focus:outline-none focus:ring-1 focus:ring-[#C5A059]"
                   placeholder={t.contact.form.message}
                 ></textarea>
                 {formErrors.message && (
@@ -685,32 +827,53 @@ export default function App() {
                     id="contact-message-error"
                     role="alert"
                     aria-live="polite"
-                    className="mt-2 text-xs text-red-300"
+                    className="text-xs text-red-300"
                   >
                     {formErrors.message}
                   </p>
                 )}
               </div>
-            </div>
-            <div className="text-center pt-8">
-              <button
-                type="submit"
-                disabled={submissionState.status === 'submitting'}
-                className="px-10 py-3 bg-[#E7E5E4] text-[#12100E] font-bold tracking-[0.2em] uppercase hover:bg-[#C5A059] hover:text-white transition-colors duration-300 text-[10px] disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {t.contact.form.submit}
-              </button>
-              {submissionState.message && (
-                <p
-                  role="status"
-                  aria-live="polite"
-                  className={`mt-3 text-xs ${submissionState.status === 'success' ? 'text-green-300' : 'text-red-300'}`}
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs uppercase tracking-[0.2em] text-[#78716C]">{t.contact.verification.label}</p>
+                  <span className="text-[10px] text-[#8A8178]">{t.contact.verification.helper}</span>
+                </div>
+                <div className="rounded-md border border-white/10 bg-[#181512] p-4">
+                  <div ref={captchaRef} className="flex justify-center" />
+                  {!HCAPTCHA_SITE_KEY && (
+                    <p className="mt-3 text-xs text-red-300" role="alert">
+                      {t.contact.submission.misconfigured}
+                    </p>
+                  )}
+                  {captchaError && (
+                    <p className="mt-3 text-xs text-red-300" role="alert">
+                      {captchaError}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-4 flex items-center gap-4 flex-wrap">
+                <button
+                  type="submit"
+                  disabled={submissionState.status === 'submitting'}
+                  className="px-8 py-3 bg-[#E7E5E4] text-[#12100E] font-semibold tracking-[0.2em] uppercase hover:bg-[#C5A059] hover:text-white transition-colors duration-300 text-[11px] rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {submissionState.message}
-                </p>
-              )}
-            </div>
-          </form>
+                  {submissionState.status === 'submitting' ? '...' : t.contact.form.submit}
+                </button>
+                {submissionState.message && (
+                  <p
+                    role="status"
+                    aria-live="polite"
+                    className={`text-xs ${submissionState.status === 'success' ? 'text-green-300' : 'text-red-300'}`}
+                  >
+                    {submissionState.message}
+                  </p>
+                )}
+              </div>
+            </form>
+          </div>
 
           <div className="mt-16 flex justify-center space-x-8 text-[#57534E]">
              <Instagram className="w-5 h-5 hover:text-[#C5A059] transition-colors cursor-pointer" />
