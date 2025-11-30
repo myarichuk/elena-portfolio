@@ -271,8 +271,6 @@ export default function App() {
     setFormErrors(validateForm(formData));
   };
 
-  const contactEmail =
-    import.meta.env.VITE_CONTACT_EMAIL || translations?.contact?.mailto?.recipient || DEFAULT_MAIL_RECIPIENT;
   const submissionSubject = translations?.contact?.mailto?.subject || 'New inquiry:';
 
   const handleSubmit = async (event) => {
@@ -298,8 +296,7 @@ export default function App() {
     formPayload.append('message', formData.message.trim());
     formPayload.append('subject', `${submissionSubject} ${formData.topic || ''}`.trim());
     formPayload.append('topic', formData.topic || '');
-    formPayload.append('recipient', contactEmail);
-
+    
     setSubmissionState({ status: 'submitting', message: '' });
 
     try {
