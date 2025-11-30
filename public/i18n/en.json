@@ -21,7 +21,6 @@
   "contact": {
     "title": "Say Hello",
     "desc": "I am rarely on social media, but I always appreciate a thoughtful message about art or life.",
-    "emailFallback": "No form? Email me directly",
     "form": { "name": "Name", "email": "Email", "message": "Message", "submit": "Send" },
     "options": ["Art Inquiry", "Just Saying Hi"],
     "errors": {
@@ -33,7 +32,7 @@
     "submission": {
       "success": "Thank you! I'll reply soon.",
       "error": "Something went wrong sending your message. Please try again shortly.",
-      "misconfigured": "Contact form is not configured. Please email me directly."
+      "misconfigured": "Contact form is not configured. Please try again later."
     },
     "mailto": { "recipient": "hello@elenayarichuk.com", "subject": "New inquiry:" }
   },
