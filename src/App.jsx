@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
+import {
   Menu,
   X,
   ChevronDown,
@@ -11,6 +11,8 @@ import {
   Palette,
   Calculator
 } from 'lucide-react';
+
+const DEFAULT_MAIL_RECIPIENT = 'hello@elenayarichuk.com';
 
 const mergeWithFallback = (base, override) => {
   if (Array.isArray(base)) {
@@ -31,6 +33,17 @@ const assetUrl = (path) => {
   const base = import.meta.env.BASE_URL ?? '/';
   const normalizedBase = base.endsWith('/') ? base : `${base}/`;
   return `${normalizedBase}${path.replace(/^\/+/g, '')}`;
+};
+
+const resolveImageSrc = (src, { upscale } = {}) => {
+  if (/^https?:\/\//.test(src)) {
+    if (upscale) {
+      return src.replace('w=800', 'w=1200');
+    }
+    return src;
+  }
+
+  return assetUrl(src);
 };
 
 const fetchLocale = async (locale) => {
@@ -56,6 +69,9 @@ export default function App() {
   const [artworks, setArtworks] = useState([]);
   const [artworksLoading, setArtworksLoading] = useState(true);
   const [artworksError, setArtworksError] = useState(null);
+  const [formData, setFormData] = useState({ name: '', email: '', topic: '', message: '' });
+  const [formErrors, setFormErrors] = useState({});
+  const [touchedFields, setTouchedFields] = useState({});
   const closeButtonRef = useRef(null);
   const translationCache = useRef({});
 
@@ -106,6 +122,15 @@ export default function App() {
       isMounted = false;
     };
   }, [lang]);
+
+  useEffect(() => {
+    if (translations?.contact?.options?.length) {
+      setFormData((prev) => ({
+        ...prev,
+        topic: prev.topic || translations.contact.options[0],
+      }));
+    }
+  }, [translations]);
 
   // Load artworks from static JSON so content stays editable outside the bundle
   useEffect(() => {
@@ -193,6 +218,69 @@ export default function App() {
     e.stopPropagation();
     if (!filteredArtworks.length) return;
     setCurrentImageIndex((prev) => (prev - 1 + filteredArtworks.length) % filteredArtworks.length);
+  };
+
+  const validateForm = (data) => {
+    const nextErrors = {};
+
+    if (!data.name.trim()) {
+      nextErrors.name = t.contact.errors.nameRequired;
+    }
+
+    if (!data.email.trim()) {
+      nextErrors.email = t.contact.errors.emailRequired;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
+      nextErrors.email = t.contact.errors.emailInvalid;
+    }
+
+    if (!data.message.trim()) {
+      nextErrors.message = t.contact.errors.messageRequired;
+    }
+
+    return nextErrors;
+  };
+
+  const handleInputChange = (field) => (event) => {
+    const value = event.target.value;
+    const updatedForm = { ...formData, [field]: value };
+    setFormData(updatedForm);
+
+    if (touchedFields[field]) {
+      setFormErrors(validateForm(updatedForm));
+    }
+  };
+
+  const handleBlur = (field) => () => {
+    setTouchedFields((prev) => ({ ...prev, [field]: true }));
+    setFormErrors(validateForm(formData));
+  };
+
+  const buildMailtoLink = (data) => {
+    const recipient = translations?.contact?.mailto?.recipient || DEFAULT_MAIL_RECIPIENT;
+    const subjectPrefix = translations?.contact?.mailto?.subject || 'New inquiry';
+    const topic = data.topic || translations?.contact?.options?.[0] || '';
+    const subject = encodeURIComponent(`${subjectPrefix} ${topic}`.trim());
+    const body = encodeURIComponent([
+      `${t.contact.form.name}: ${data.name}`,
+      `${t.contact.form.email}: ${data.email}`,
+      `${t.contact.form.message}:`,
+      '',
+      data.message,
+    ].join('\n'));
+
+    return `mailto:${recipient}?subject=${subject}&body=${body}`;
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const validation = validateForm(formData);
+    setTouchedFields({ name: true, email: true, topic: true, message: true });
+    setFormErrors(validation);
+
+    if (Object.keys(validation).length === 0) {
+      window.location.href = buildMailtoLink(formData);
+    }
   };
 
   // Lightbox keyboard handling and focus management
@@ -287,7 +375,7 @@ export default function App() {
             </div>
 
             {/* Desktop Menu */}
-            <div className="hidden md:flex space-x-10 items-center">
+            <div className="hidden md:flex items-center gap-8">
               <a href="#gallery" className="text-xs uppercase tracking-[0.2em] hover:text-[#C5A059] transition-colors">
                 {t.nav.works}
               </a>
@@ -340,9 +428,9 @@ export default function App() {
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-[#12100E]/60 z-10 mix-blend-multiply"></div>
-          <img 
-            src="https://images.unsplash.com/photo-1596238806208-1fb894b9f665?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" 
-            alt="Studio" 
+          <img
+            src={assetUrl('images/hero.jpg')}
+            alt="Studio"
             className="w-full h-full object-cover object-center opacity-70"
           />
         </div>
@@ -419,7 +507,7 @@ export default function App() {
                 className="group relative aspect-[4/5] cursor-pointer overflow-hidden bg-[#1C1A18] rounded-sm shadow-lg animate-fade-in-up"
               >
                 <img
-                  src={art.src}
+                  src={resolveImageSrc(art.src)}
                   alt={art.title}
                   className={`w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105 opacity-90 group-hover:opacity-100 ${art.grayscale ? 'grayscale' : ''}`}
                 />
@@ -486,28 +574,86 @@ export default function App() {
           <h2 className="font-serif text-3xl md:text-4xl mb-4 italic">{t.contact.title}</h2>
           <p className="text-[#A8A29E] mb-12 font-light text-sm">{t.contact.desc}</p>
           
-          <form className={`space-y-6 ${isRTL ? 'text-right' : 'text-left'}`} onSubmit={(e) => { e.preventDefault(); alert('Message sent!'); }}>
+          <form className={`space-y-6 ${isRTL ? 'text-right' : 'text-left'}`} noValidate onSubmit={handleSubmit}>
             <div className="space-y-6">
-              <input 
-                type="text" 
-                className="w-full bg-transparent border-b border-white/20 py-3 text-[#E7E5E4] focus:outline-none focus:border-[#C5A059] transition-colors font-light placeholder-[#44403C] text-sm" 
-                placeholder={t.contact.form.name}
-              />
-              <input 
-                type="email" 
-                className="w-full bg-transparent border-b border-white/20 py-3 text-[#E7E5E4] focus:outline-none focus:border-[#C5A059] transition-colors font-light placeholder-[#44403C] text-sm" 
-                placeholder={t.contact.form.email}
-              />
-               <select className="w-full bg-[#12100E] border-b border-white/20 py-3 text-[#A8A29E] focus:outline-none focus:border-[#C5A059] transition-colors font-light text-sm">
-                {t.contact.options.map((opt) => (
+              <div>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={handleInputChange('name')}
+                  onBlur={handleBlur('name')}
+                  aria-invalid={Boolean(formErrors.name)}
+                  aria-describedby={formErrors.name ? 'contact-name-error' : undefined}
+                  className="w-full bg-transparent border-b border-white/20 py-3 text-[#E7E5E4] focus:outline-none focus:border-[#C5A059] transition-colors font-light placeholder-[#44403C] text-sm"
+                  placeholder={t.contact.form.name}
+                />
+                {formErrors.name && (
+                  <p
+                    id="contact-name-error"
+                    role="alert"
+                    aria-live="polite"
+                    className="mt-2 text-xs text-red-300"
+                  >
+                    {formErrors.name}
+                  </p>
+                )}
+              </div>
+              <div>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange('email')}
+                  onBlur={handleBlur('email')}
+                  aria-invalid={Boolean(formErrors.email)}
+                  aria-describedby={formErrors.email ? 'contact-email-error' : undefined}
+                  className="w-full bg-transparent border-b border-white/20 py-3 text-[#E7E5E4] focus:outline-none focus:border-[#C5A059] transition-colors font-light placeholder-[#44403C] text-sm"
+                  placeholder={t.contact.form.email}
+                />
+                {formErrors.email && (
+                  <p
+                    id="contact-email-error"
+                    role="alert"
+                    aria-live="polite"
+                    className="mt-2 text-xs text-red-300"
+                  >
+                    {formErrors.email}
+                  </p>
+                )}
+              </div>
+              <div>
+                <select
+                  value={formData.topic}
+                  onChange={handleInputChange('topic')}
+                  onBlur={handleBlur('topic')}
+                  className="w-full bg-[#12100E] border-b border-white/20 py-3 text-[#A8A29E] focus:outline-none focus:border-[#C5A059] transition-colors font-light text-sm"
+                >
+                  {t.contact.options.map((opt) => (
                     <option key={opt}>{opt}</option>
-                ))}
-              </select>
-              <textarea 
-                rows="4" 
-                className="w-full bg-transparent border-b border-white/20 py-3 text-[#E7E5E4] focus:outline-none focus:border-[#C5A059] transition-colors font-light placeholder-[#44403C] text-sm" 
-                placeholder={t.contact.form.message}
-              ></textarea>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <textarea
+                  rows="4"
+                  value={formData.message}
+                  onChange={handleInputChange('message')}
+                  onBlur={handleBlur('message')}
+                  aria-invalid={Boolean(formErrors.message)}
+                  aria-describedby={formErrors.message ? 'contact-message-error' : undefined}
+                  className="w-full bg-transparent border-b border-white/20 py-3 text-[#E7E5E4] focus:outline-none focus:border-[#C5A059] transition-colors font-light placeholder-[#44403C] text-sm"
+                  placeholder={t.contact.form.message}
+                ></textarea>
+                {formErrors.message && (
+                  <p
+                    id="contact-message-error"
+                    role="alert"
+                    aria-live="polite"
+                    className="mt-2 text-xs text-red-300"
+                  >
+                    {formErrors.message}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="text-center pt-8">
               <button type="submit" className="px-10 py-3 bg-[#E7E5E4] text-[#12100E] font-bold tracking-[0.2em] uppercase hover:bg-[#C5A059] hover:text-white transition-colors duration-300 text-[10px]">
@@ -563,10 +709,10 @@ export default function App() {
 
           <div className="max-w-4xl w-full flex flex-col items-center" onClick={e => e.stopPropagation()}>
             <div className="relative shadow-2xl p-1 bg-white/5 backdrop-blur-sm">
-              <img 
-                src={filteredArtworks[currentImageIndex].src.replace('w=800', 'w=1200')} 
-                className="max-h-[70vh] max-w-full object-contain" 
-                alt="Full size" 
+              <img
+                src={resolveImageSrc(filteredArtworks[currentImageIndex].src, { upscale: true })}
+                className="max-h-[70vh] max-w-full object-contain"
+                alt="Full size"
               />
             </div>
             <div className="text-center mt-6 max-w-lg">
