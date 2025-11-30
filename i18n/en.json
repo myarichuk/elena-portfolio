@@ -21,14 +21,16 @@
   "contact": {
     "title": "Say Hello",
     "desc": "I am rarely on social media, but I always appreciate a thoughtful message about art or life.",
-    "form": { "name": "Name", "email": "Email", "message": "Message", "submit": "Send" },
+    "form": { "name": "Name", "email": "Email", "message": "Message", "submit": "Send", "topic": "Topic" },
     "options": ["Art Inquiry", "Just Saying Hi"],
     "errors": {
       "nameRequired": "Please share your name so I know who is writing.",
       "emailRequired": "An email address is required to get back to you.",
       "emailInvalid": "Enter a valid email address.",
-      "messageRequired": "Tell me a bit about what you would like to discuss."
+      "messageRequired": "Tell me a bit about what you would like to discuss.",
+      "captchaRequired": "Please confirm you're human by completing the verification."
     },
+    "verification": { "label": "Human verification", "helper": "Protected by hCaptcha" },
     "submission": {
       "success": "Thank you! I'll reply soon.",
       "error": "Something went wrong sending your message. Please try again shortly.",
