@@ -21,7 +21,14 @@
     "title": "Say Hello",
     "desc": "I am rarely on social media, but I always appreciate a thoughtful message about art or life.",
     "form": { "name": "Name", "email": "Email", "message": "Message", "submit": "Send" },
-    "options": ["Art Inquiry", "Just Saying Hi"]
+    "options": ["Art Inquiry", "Just Saying Hi"],
+    "errors": {
+      "nameRequired": "Please share your name so I know who is writing.",
+      "emailRequired": "An email address is required to get back to you.",
+      "emailInvalid": "Enter a valid email address.",
+      "messageRequired": "Tell me a bit about what you would like to discuss."
+    },
+    "mailto": { "recipient": "hello@elenayarichuk.com", "subject": "New inquiry:" }
   },
   "footer": { "copyright": "© 2024 Elena Yarichuk." }
 }

@@ -8,4 +8,11 @@ Translations are stored as JSON files in `public/i18n`. The app lazily fetches t
 ## Development
 - `npm run dev` – start the local dev server.
 - `npm run build` – build for production.
-- `npm test` – run locale sanity checks to confirm locale files share the same shape.
+- `npm test` – run node-based sanity checks to confirm locale files share the same shape and JSON assets parse correctly.
+
+## Assets
+- Images under `public/images` are tracked with Git LFS to keep the repository lean while serving optimized assets.
+
+## Contact form
+- The contact form validates required fields client-side and surfaces inline errors with ARIA announcements.
+- Successful submissions compose a `mailto:` link (default: `hello@elenayarichuk.com`) so the page stays fully static for GitHub Pages hosting.
