@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import Contact from './components/Contact';
 import Gallery from './components/Gallery';
 import Hero from './components/Hero';
-import Lightbox from './components/Lightbox';
 import Navigation from './components/Navigation';
 import About from './components/About';
 import { assetUrl, resolveImageSrc } from './utils/assets';
@@ -16,8 +15,6 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [scrolled, setScrolled] = useState(false);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lang, setLang] = useState('en');
   const [translations, setTranslations] = useState(null);
   const [translationsError, setTranslationsError] = useState(null);
@@ -29,7 +26,6 @@ export default function App() {
   const [formErrors, setFormErrors] = useState({});
   const [touchedFields, setTouchedFields] = useState({});
   const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '' });
-  const closeButtonRef = useRef(null);
   const translationCache = useRef({}); // Cache per-locale dictionaries to avoid redundant fetches when toggling languages.
   const captchaRef = useRef(null);
   const [captchaToken, setCaptchaToken] = useState('');
@@ -103,7 +99,7 @@ export default function App() {
       })
       .then((data) => {
         if (isMounted) {
-          setArtworks(data); // Load once so filters and lightbox share a consistent artwork list.
+          setArtworks(data); // Load once so filters and gallery share a consistent artwork list.
         }
       })
       .catch((err) => {
@@ -149,30 +145,6 @@ export default function App() {
   }, [lang, isRTL]);
 
   const filteredArtworks = artworks.filter((art) => activeFilter === 'all' || art.category === activeFilter);
-
-  const openLightbox = (index) => {
-    if (!filteredArtworks.length) return;
-    setCurrentImageIndex(index);
-    setLightboxOpen(true);
-    document.body.style.overflow = 'hidden';
-  };
-
-  const closeLightbox = () => {
-    setLightboxOpen(false);
-    document.body.style.overflow = 'auto';
-  };
-
-  const nextImage = (e) => {
-    e?.stopPropagation();
-    if (!filteredArtworks.length) return;
-    setCurrentImageIndex((prev) => (prev + 1) % filteredArtworks.length);
-  };
-
-  const prevImage = (e) => {
-    e?.stopPropagation();
-    if (!filteredArtworks.length) return;
-    setCurrentImageIndex((prev) => (prev - 1 + filteredArtworks.length) % filteredArtworks.length);
-  };
 
   const validateForm = (data) => {
     const nextErrors = {};
@@ -293,30 +265,6 @@ export default function App() {
     }
   };
 
-  useEffect(() => {
-    if (!lightboxOpen) return;
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        closeLightbox();
-      } else if (event.key === 'ArrowLeft') {
-        event.preventDefault();
-        (isRTL ? nextImage : prevImage)();
-      } else if (event.key === 'ArrowRight') {
-        event.preventDefault();
-        (isRTL ? prevImage : nextImage)();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    closeButtonRef.current?.focus();
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [lightboxOpen, isRTL]);
-
   const toggleLang = () => {
     if (lang === 'en') setLang('ru');
     else if (lang === 'ru') setLang('he');
@@ -386,7 +334,6 @@ export default function App() {
         filteredArtworks={filteredArtworks}
         activeFilter={activeFilter}
         setActiveFilter={setActiveFilter}
-        openLightbox={openLightbox}
         resolveImageSrc={resolveImageSrc}
       />
 
@@ -416,16 +363,6 @@ export default function App() {
         </div>
       </footer>
 
-      <Lightbox
-        lightboxOpen={lightboxOpen}
-        filteredArtworks={filteredArtworks}
-        currentImageIndex={currentImageIndex}
-        closeLightbox={closeLightbox}
-        nextImage={nextImage}
-        prevImage={prevImage}
-        isRTL={isRTL}
-        closeButtonRef={closeButtonRef}
-      />
     </div>
   );
 }

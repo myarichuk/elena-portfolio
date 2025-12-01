@@ -1,4 +1,5 @@
 import React from 'react';
+import { Gallery as PhotoSwipeGallery, Item } from 'react-photoswipe-gallery';
 export default function Gallery({
   t,
   artworksLoading,
@@ -6,7 +7,6 @@ export default function Gallery({
   filteredArtworks,
   activeFilter,
   setActiveFilter,
-  openLightbox,
   resolveImageSrc
 }) {
   return (
@@ -47,27 +47,50 @@ export default function Gallery({
           )}
 
           {!artworksLoading &&
-            !artworksError &&
-            filteredArtworks.map((art, index) => (
-              <div
-                key={art.id}
-                onClick={() => openLightbox(index)}
-                className="group relative aspect-[4/5] cursor-pointer overflow-hidden bg-[#1C1A18] rounded-sm shadow-lg animate-fade-in-up"
-              >
-                <img
-                  src={resolveImageSrc(art.src)}
-                  alt={art.title}
-                  className={`w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105 opacity-90 group-hover:opacity-100 ${
-                    art.grayscale ? 'grayscale' : ''
-                  }`}
-                />
-                <div className="absolute inset-0 bg-[#12100E]/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center p-6 text-center">
-                  <p className="text-[#C5A059] text-[10px] uppercase tracking-[0.3em] mb-3">{art.medium}</p>
-                  <h3 className="font-serif text-2xl italic text-[#E7E5E4]">{art.title}</h3>
-                  <p className="text-[#A8A29E] text-xs mt-3 font-sans opacity-75">{art.details}</p>
-                </div>
-              </div>
-            ))}
+            !artworksError && (
+              <PhotoSwipeGallery options={{ preloaderDelay: 0, loop: true, wheelToZoom: true }}>
+                {filteredArtworks.map((art) => (
+                  <Item
+                    key={art.id}
+                    original={resolveImageSrc(art.src, { upscale: true })}
+                    thumbnail={resolveImageSrc(art.src)}
+                    width="1600"
+                    height="2000"
+                    caption={`${art.title} — ${art.details}`}
+                  >
+                    {({ ref, open }) => (
+                      <div
+                        ref={ref}
+                        onClick={open}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            open();
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        className="group relative aspect-[4/5] cursor-pointer overflow-hidden bg-[#1C1A18] rounded-sm shadow-lg animate-fade-in-up"
+                        aria-label={t?.gallery?.openLightboxAria ? `${t.gallery.openLightboxAria} ${art.title}` : `Open ${art.title}`}
+                      >
+                        <img
+                          src={resolveImageSrc(art.src)}
+                          alt={art.title}
+                          className={`w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105 opacity-90 group-hover:opacity-100 ${
+                            art.grayscale ? 'grayscale' : ''
+                          }`}
+                        />
+                        <div className="absolute inset-0 bg-[#12100E]/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center p-6 text-center">
+                          <p className="text-[#C5A059] text-[10px] uppercase tracking-[0.3em] mb-3">{art.medium}</p>
+                          <h3 className="font-serif text-2xl italic text-[#E7E5E4]">{art.title}</h3>
+                          <p className="text-[#A8A29E] text-xs mt-3 font-sans opacity-75">{art.details}</p>
+                        </div>
+                      </div>
+                    )}
+                  </Item>
+                ))}
+              </PhotoSwipeGallery>
+            )}
         </div>
 
         <div className="text-center mt-20">
