@@ -277,77 +277,100 @@ export default function App() {
 
   const submissionSubject = translations?.contact?.subjectPrefix || 'New inquiry:';
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const formElement = event.currentTarget;
+const handleSubmit = async (event) => {
+  event.preventDefault();
 
-    const validation = validateForm(formData);
-    setTouchedFields({ name: true, email: true, topic: true, message: true });
-    setFormErrors(validation);
-    setSubmissionState({ status: 'idle', message: '' });
-    setCaptchaError('');
+  // Validate form fields one last time
+  const validation = validateForm(formData);
+  setTouchedFields({ name: true, email: true, topic: true, message: true });
+  setFormErrors(validation);
+  setSubmissionState({ status: 'idle', message: '' });
+  setCaptchaError('');
 
-    if (Object.keys(validation).length > 0) return;
+  if (Object.keys(validation).length > 0) return;
 
-    if (!WEB3FORMS_ACCESS_KEY) {
-      console.error('Missing Web3Forms access key (VITE_WEB3FORMS_ACCESS_KEY).');
-      setSubmissionState({ status: 'error', message: t.contact.submission.misconfigured });
-      return;
-    }
+  // Missing API keys? Bail loudly.
+  if (!WEB3FORMS_ACCESS_KEY || !HCAPTCHA_SITE_KEY) {
+    setSubmissionState({
+      status: 'error',
+      message: t.contact.submission.misconfigured
+    });
+    return;
+  }
 
-    if (!HCAPTCHA_SITE_KEY) {
-      console.error('Missing hCaptcha site key (VITE_HCAPTCHA_SITE_KEY).');
-      setSubmissionState({ status: 'error', message: t.contact.submission.misconfigured });
-      return;
-    }
+  // No captcha token? User didn't click it.
+  if (!captchaToken) {
+    setCaptchaError(t.contact.errors.captchaRequired);
+    return;
+  }
 
-    if (!captchaToken) {
-      setCaptchaError(t.contact.errors.captchaRequired);
-      return;
-    }
+  setSubmissionState({ status: 'submitting', message: '' });
 
-    const formPayload = new FormData(formElement);
-    formPayload.set('access_key', WEB3FORMS_ACCESS_KEY);
-    formPayload.set('from_name', formData.name.trim());
-    formPayload.set('email', formData.email.trim());
-    formPayload.set('message', formData.message.trim());
-    formPayload.set('subject', `${submissionSubject} ${formData.topic || ''}`.trim());
-    formPayload.set('topic', formData.topic || '');
-    formPayload.set('h-captcha-sitekey', HCAPTCHA_SITE_KEY);
-    formPayload.set('h-captcha-response', captchaToken);
+  // Build payload manually to prevent stray inputs
+  const formPayload = new FormData();
+  formPayload.set('access_key', WEB3FORMS_ACCESS_KEY);
+  formPayload.set('from_name', formData.name.trim());
+  formPayload.set('email', formData.email.trim());
+  formPayload.set('topic', formData.topic || '');
+  formPayload.set('message', formData.message.trim());
+  formPayload.set(
+    'subject',
+    `${submissionSubject} ${formData.topic || ''}`.trim()
+  );
 
-    setSubmissionState({ status: 'submitting', message: '' });
+  // The ONLY hCaptcha field Web3Forms accepts
+  formPayload.set('h-captcha-response', captchaToken);
 
-    try {
-      const response = await fetch(WEB3FORMS_ENDPOINT, {
-        method: 'POST',
-        body: formPayload,
+  try {
+    const response = await fetch(WEB3FORMS_ENDPOINT, {
+      method: 'POST',
+      body: formPayload
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      // hCaptcha failure or other API error
+      setSubmissionState({
+        status: 'error',
+        message: data.message || t.contact.submission.error
       });
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        setSubmissionState({
-          status: 'error',
-          message: data.message || t.contact.submission.error,
-        });
-        captchaRef.current?.resetCaptcha();
-        return;
-      }
-
-      setSubmissionState({ status: 'success', message: t.contact.submission.success });
-      setFormData({ name: '', email: '', topic: translations?.contact?.options?.[0] || '', message: '' });
-      setTouchedFields({});
-      setFormErrors({});
+      captchaRef.current?.resetCaptcha();
       setCaptchaToken('');
-      setCaptchaError('');
-      captchaRef.current?.resetCaptcha();
-    } catch (error) {
-      console.error(error);
-      setSubmissionState({ status: 'error', message: t.contact.submission.error });
-      captchaRef.current?.resetCaptcha();
+      return;
     }
-  };
+
+    // Success
+    setSubmissionState({
+      status: 'success',
+      message: t.contact.submission.success
+    });
+
+    setFormData({
+      name: '',
+      email: '',
+      topic: translations?.contact?.options?.[0] || '',
+      message: ''
+    });
+
+    setTouchedFields({});
+    setFormErrors({});
+    setCaptchaToken('');
+    captchaRef.current?.resetCaptcha();
+
+  } catch (error) {
+    console.error(error);
+    setSubmissionState({
+      status: 'error',
+      message: t.contact.submission.error
+    });
+
+    captchaRef.current?.resetCaptcha();
+    setCaptchaToken('');
+  }
+};
+
 
   // Lightbox keyboard handling and focus management
   useEffect(() => {
@@ -779,8 +802,6 @@ export default function App() {
                   <span className="text-[10px] text-[#8A8178]">{t.contact.verification.helper}</span>
                 </div>
                 <div className="rounded-md border border-white/10 bg-[#181512] p-4">
-                  <input type="hidden" name="h-captcha-sitekey" value={HCAPTCHA_SITE_KEY || ''} />
-                  <input type="hidden" name="h-captcha-response" value={captchaToken} />
                   {HCAPTCHA_SITE_KEY ? (
                     <div className="flex justify-center">
                       <HCaptcha
