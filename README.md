@@ -16,8 +16,8 @@ Translations are stored as JSON files in `public/i18n`. The app lazily fetches t
 Vite provides the dev server and bundling, with React components styled via Tailwind utility classes. No backend services are bundled; the site deploys as static assets.
 
 ### Lightbox usage
-- The gallery lightbox supports keyboard arrows, Escape to close, and touch swipes/mobile buttons to move through images.
-- Provide meaningful `title`, `category`, and `details` fields in `data/artworks.json` so captions and alt text stay helpful.
+- Gallery items open through [`react-photoswipe-gallery`](https://github.com/igordanchenko/react-photoswipe-gallery), which handles keyboard navigation, zooming, and swipe gestures out of the box.
+- Provide meaningful `title`, `category`, and `details` fields in `data/artworks.json` so captions and alt text stay helpful; these feed PhotoSwipe captions.
 
 ## Assets
 - Images under `public/images` are tracked directly in Git (no LFS) so they publish cleanly to GitHub Pages and other static hosts.
