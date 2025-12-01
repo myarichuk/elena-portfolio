@@ -111,12 +111,19 @@ export default function Contact({
                 value={formData.topic}
                 onChange={handleInputChange('topic')}
                 onBlur={handleBlur('topic')}
+                aria-invalid={Boolean(formErrors.topic)}
+                aria-describedby={formErrors.topic ? 'contact-topic-error' : undefined}
                 className="w-full rounded-md bg-[#181512] border border-white/10 px-4 py-3 text-sm text-[#E7E5E4] focus:border-[#C5A059] focus:outline-none focus:ring-1 focus:ring-[#C5A059]"
               >
                 {t.contact.options.map((opt) => (
                   <option key={opt}>{opt}</option>
                 ))}
               </select>
+              {formErrors.topic && (
+                <p id="contact-topic-error" role="alert" aria-live="polite" className="text-xs text-red-300">
+                  {formErrors.topic}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

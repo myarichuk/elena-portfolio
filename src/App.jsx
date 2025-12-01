@@ -159,6 +159,10 @@ export default function App() {
       nextErrors.email = t.contact.errors.emailInvalid;
     }
 
+    if (!data.topic.trim()) {
+      nextErrors.topic = t.contact.errors.topicRequired;
+    }
+
     if (!data.message.trim()) {
       nextErrors.message = t.contact.errors.messageRequired;
     }
