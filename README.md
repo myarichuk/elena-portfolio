@@ -25,6 +25,7 @@ Vite provides the dev server and bundling, with React components styled via Tail
 
 ## Contact form
 - The contact form validates required fields client-side and surfaces inline errors with ARIA announcements.
+- Validation messages are sourced from the active locale so field errors (including topic selection) stay translated.
 - Submissions post to Web3Forms at `https://api.web3forms.com/submit`.
 - Provide `VITE_WEB3FORMS_ACCESS_KEY` in your environment to enable submissions; there are no baked-in fallback keys.
 - Enable hCaptcha spam protection by setting `VITE_HCAPTCHA_SITE_KEY`; the React hCaptcha widget renders inside the Web3Forms form, posting the site key and verification token with each submission.
