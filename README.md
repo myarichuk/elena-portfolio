@@ -18,4 +18,4 @@ Translations are stored as JSON files in `public/i18n`. The app lazily fetches t
 - The contact form validates required fields client-side and surfaces inline errors with ARIA announcements.
 - Submissions post to Web3Forms at `https://api.web3forms.com/submit`.
 - Provide `VITE_WEB3FORMS_ACCESS_KEY` in your environment to enable submissions; there are no baked-in fallback keys.
-- Enable hCaptcha spam protection by setting `VITE_HCAPTCHA_SITE_KEY`; the widget must load and return a token before Web3Forms accepts a submission. Tokens are reset after each submission attempt so visitors can immediately try again if something fails.
+- Enable hCaptcha spam protection by setting `VITE_HCAPTCHA_SITE_KEY`; the React hCaptcha widget renders inside the Web3Forms form, posting the site key and verification token with each submission.

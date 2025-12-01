@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 import {
   Menu,
   X,
@@ -88,13 +89,11 @@ export default function App() {
   const [formErrors, setFormErrors] = useState({});
   const [touchedFields, setTouchedFields] = useState({});
   const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '' });
+  const closeButtonRef = useRef(null);
+  const translationCache = useRef({});
+  const captchaRef = useRef(null);
   const [captchaToken, setCaptchaToken] = useState('');
   const [captchaError, setCaptchaError] = useState('');
-  const [captchaReady, setCaptchaReady] = useState(false);
-  const closeButtonRef = useRef(null);
-  const captchaRef = useRef(null);
-  const captchaWidgetId = useRef(null);
-  const translationCache = useRef({});
 
   // Helper to get text
   const t = translations || translationCache.current.en || {};
@@ -211,66 +210,6 @@ export default function App() {
     document.documentElement.lang = lang;
   }, [lang, isRTL]);
 
-  useEffect(() => {
-    if (!HCAPTCHA_SITE_KEY || typeof window === 'undefined') return;
-
-    const handleLoad = () => setCaptchaReady(true);
-    const handleError = () =>
-      setCaptchaError('Captcha could not load. Please refresh and try again.');
-
-    const existingScript = document.getElementById('hcaptcha-script');
-
-    if (existingScript) {
-      existingScript.addEventListener('load', handleLoad);
-      existingScript.addEventListener('error', handleError);
-      if (window.hcaptcha) {
-        setCaptchaReady(true);
-      }
-
-      return () => {
-        existingScript.removeEventListener('load', handleLoad);
-        existingScript.removeEventListener('error', handleError);
-      };
-    }
-
-    const script = document.createElement('script');
-    script.id = 'hcaptcha-script';
-    script.src = 'https://js.hcaptcha.com/1/api.js?render=explicit';
-    script.async = true;
-    script.defer = true;
-    script.onload = handleLoad;
-    script.onerror = handleError;
-    document.body.appendChild(script);
-
-    return () => {
-      script.onload = null;
-      script.onerror = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!captchaReady || !captchaRef.current || typeof window === 'undefined' || !window.hcaptcha || !HCAPTCHA_SITE_KEY) {
-      return;
-    }
-
-    if (captchaWidgetId.current !== null) {
-      window.hcaptcha.reset(captchaWidgetId.current);
-      return;
-    }
-
-    captchaWidgetId.current = window.hcaptcha.render(captchaRef.current, {
-      sitekey: HCAPTCHA_SITE_KEY,
-      theme: 'dark',
-      callback: (token) => {
-        setCaptchaToken(token);
-        setCaptchaError('');
-      },
-      'expired-callback': () => setCaptchaToken(''),
-      'error-callback': () =>
-        setCaptchaError('Captcha challenge failed to load. Please try again.'),
-    });
-  }, [captchaReady]);
-
   // Filter Logic
   const filteredArtworks = artworks.filter((art) =>
     activeFilter === 'all' || art.category === activeFilter
@@ -340,6 +279,7 @@ export default function App() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const formElement = event.currentTarget;
 
     const validation = validateForm(formData);
     setTouchedFields({ name: true, email: true, topic: true, message: true });
@@ -363,20 +303,18 @@ export default function App() {
 
     if (!captchaToken) {
       setCaptchaError(t.contact.errors.captchaRequired);
-      if (window?.hcaptcha && captchaWidgetId.current !== null) {
-        window.hcaptcha.execute(captchaWidgetId.current);
-      }
       return;
     }
 
-    const formPayload = new FormData();
-    formPayload.append('access_key', WEB3FORMS_ACCESS_KEY);
-    formPayload.append('from_name', formData.name.trim());
-    formPayload.append('email', formData.email.trim());
-    formPayload.append('message', formData.message.trim());
-    formPayload.append('subject', `${submissionSubject} ${formData.topic || ''}`.trim());
-    formPayload.append('topic', formData.topic || '');
-    formPayload.append('h-captcha-response', captchaToken);
+    const formPayload = new FormData(formElement);
+    formPayload.set('access_key', WEB3FORMS_ACCESS_KEY);
+    formPayload.set('from_name', formData.name.trim());
+    formPayload.set('email', formData.email.trim());
+    formPayload.set('message', formData.message.trim());
+    formPayload.set('subject', `${submissionSubject} ${formData.topic || ''}`.trim());
+    formPayload.set('topic', formData.topic || '');
+    formPayload.set('h-captcha-sitekey', HCAPTCHA_SITE_KEY);
+    formPayload.set('h-captcha-response', captchaToken);
 
     setSubmissionState({ status: 'submitting', message: '' });
 
@@ -389,7 +327,12 @@ export default function App() {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message || 'Submission failed');
+        setSubmissionState({
+          status: 'error',
+          message: data.message || t.contact.submission.error,
+        });
+        captchaRef.current?.resetCaptcha();
+        return;
       }
 
       setSubmissionState({ status: 'success', message: t.contact.submission.success });
@@ -397,16 +340,12 @@ export default function App() {
       setTouchedFields({});
       setFormErrors({});
       setCaptchaToken('');
-      if (window?.hcaptcha && captchaWidgetId.current !== null) {
-        window.hcaptcha.reset(captchaWidgetId.current);
-      }
+      setCaptchaError('');
+      captchaRef.current?.resetCaptcha();
     } catch (error) {
       console.error(error);
       setSubmissionState({ status: 'error', message: t.contact.submission.error });
-      setCaptchaToken('');
-      if (window?.hcaptcha && captchaWidgetId.current !== null) {
-        window.hcaptcha.reset(captchaWidgetId.current);
-      }
+      captchaRef.current?.resetCaptcha();
     }
   };
 
@@ -738,6 +677,7 @@ export default function App() {
                   </label>
                   <input
                     id="contact-name"
+                    name="name"
                     type="text"
                     value={formData.name}
                     onChange={handleInputChange('name')}
@@ -764,6 +704,7 @@ export default function App() {
                   </label>
                   <input
                     id="contact-email"
+                    name="email"
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange('email')}
@@ -792,6 +733,7 @@ export default function App() {
                 </label>
                 <select
                   id="contact-topic"
+                  name="topic"
                   value={formData.topic}
                   onChange={handleInputChange('topic')}
                   onBlur={handleBlur('topic')}
@@ -809,6 +751,7 @@ export default function App() {
                 </label>
                 <textarea
                   id="contact-message"
+                  name="message"
                   rows="4"
                   value={formData.message}
                   onChange={handleInputChange('message')}
@@ -836,8 +779,29 @@ export default function App() {
                   <span className="text-[10px] text-[#8A8178]">{t.contact.verification.helper}</span>
                 </div>
                 <div className="rounded-md border border-white/10 bg-[#181512] p-4">
-                  <div ref={captchaRef} className="flex justify-center" />
-                  {!HCAPTCHA_SITE_KEY && (
+                  <input type="hidden" name="h-captcha-sitekey" value={HCAPTCHA_SITE_KEY || ''} />
+                  <input type="hidden" name="h-captcha-response" value={captchaToken} />
+                  {HCAPTCHA_SITE_KEY ? (
+                    <div className="flex justify-center">
+                      <HCaptcha
+                        ref={captchaRef}
+                        sitekey={HCAPTCHA_SITE_KEY}
+                        theme="dark"
+                        onVerify={(token) => {
+                          setCaptchaToken(token);
+                          setCaptchaError('');
+                        }}
+                        onExpire={() => {
+                          setCaptchaToken('');
+                          setCaptchaError(t.contact.errors.captchaRequired);
+                        }}
+                        onError={() => {
+                          setCaptchaToken('');
+                          setCaptchaError(t.contact.submission.error);
+                        }}
+                      />
+                    </div>
+                  ) : (
                     <p className="mt-3 text-xs text-red-300" role="alert">
                       {t.contact.submission.misconfigured}
                     </p>
