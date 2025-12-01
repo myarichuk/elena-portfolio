@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Gallery as PhotoSwipeGallery, Item } from 'react-photoswipe-gallery';
+import { getItemDimensions } from '../utils/galleryDimensions';
 export default function Gallery({
   t,
   artworksLoading,
@@ -9,6 +10,45 @@ export default function Gallery({
   setActiveFilter,
   resolveImageSrc
 }) {
+  const [imageDimensions, setImageDimensions] = useState({});
+
+  // Preload full-size images to record their natural dimensions so the lightbox respects each artwork's aspect ratio.
+  useEffect(() => {
+    let isMounted = true;
+    const pendingLoads = [];
+
+    filteredArtworks.forEach((art) => {
+      if (imageDimensions[art.id]) return;
+
+      const img = new Image();
+      img.decoding = 'async';
+      img.onload = () => {
+        if (!isMounted) return;
+        setImageDimensions((prev) => {
+          if (prev[art.id]) return prev;
+          return {
+            ...prev,
+            [art.id]: { width: img.naturalWidth || 1600, height: img.naturalHeight || 2000 }
+          };
+        });
+      };
+      img.onerror = () => {
+        if (!isMounted) return;
+        setImageDimensions((prev) => (prev[art.id] ? prev : { ...prev, [art.id]: { width: 1600, height: 2000 } }));
+      };
+      img.src = resolveImageSrc(art.src, { upscale: true });
+      pendingLoads.push(img);
+    });
+
+    return () => {
+      isMounted = false;
+      pendingLoads.forEach((img) => {
+        img.onload = null;
+        img.onerror = null;
+      });
+    };
+  }, [filteredArtworks, imageDimensions, resolveImageSrc]);
+
   return (
     <section id="gallery" className="py-24 bg-[#12100E] relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -49,46 +89,49 @@ export default function Gallery({
           {!artworksLoading &&
             !artworksError && (
               <PhotoSwipeGallery options={{ preloaderDelay: 0, loop: true, wheelToZoom: true }}>
-                {filteredArtworks.map((art) => (
-                  <Item
-                    key={art.id}
-                    original={resolveImageSrc(art.src, { upscale: true })}
-                    thumbnail={resolveImageSrc(art.src)}
-                    width="1600"
-                    height="2000"
-                    caption={`${art.title} — ${art.details}`}
-                  >
-                    {({ ref, open }) => (
-                      <div
-                        ref={ref}
-                        onClick={open}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            open();
-                          }
-                        }}
-                        role="button"
-                        tabIndex={0}
-                        className="group relative aspect-[4/5] cursor-pointer overflow-hidden bg-[#1C1A18] rounded-sm shadow-lg animate-fade-in-up"
-                        aria-label={t?.gallery?.openLightboxAria ? `${t.gallery.openLightboxAria} ${art.title}` : `Open ${art.title}`}
-                      >
-                        <img
-                          src={resolveImageSrc(art.src)}
-                          alt={art.title}
-                          className={`w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105 opacity-90 group-hover:opacity-100 ${
-                            art.grayscale ? 'grayscale' : ''
-                          }`}
-                        />
-                        <div className="absolute inset-0 bg-[#12100E]/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center p-6 text-center">
-                          <p className="text-[#C5A059] text-[10px] uppercase tracking-[0.3em] mb-3">{art.medium}</p>
-                          <h3 className="font-serif text-2xl italic text-[#E7E5E4]">{art.title}</h3>
-                          <p className="text-[#A8A29E] text-xs mt-3 font-sans opacity-75">{art.details}</p>
+                {filteredArtworks.map((art) => {
+                  const { width, height } = getItemDimensions(imageDimensions, art.id);
+                  return (
+                    <Item
+                      key={art.id}
+                      original={resolveImageSrc(art.src, { upscale: true })}
+                      thumbnail={resolveImageSrc(art.src)}
+                      width={width}
+                      height={height}
+                      caption={`${art.title} — ${art.details}`}
+                    >
+                      {({ ref, open }) => (
+                        <div
+                          ref={ref}
+                          onClick={open}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              open();
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          className="group relative aspect-[4/5] cursor-pointer overflow-hidden bg-[#1C1A18] rounded-sm shadow-lg animate-fade-in-up"
+                          aria-label={t?.gallery?.openLightboxAria ? `${t.gallery.openLightboxAria} ${art.title}` : `Open ${art.title}`}
+                        >
+                          <img
+                            src={resolveImageSrc(art.src)}
+                            alt={art.title}
+                            className={`w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105 opacity-90 group-hover:opacity-100 ${
+                              art.grayscale ? 'grayscale' : ''
+                            }`}
+                          />
+                          <div className="absolute inset-0 bg-[#12100E]/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center p-6 text-center">
+                            <p className="text-[#C5A059] text-[10px] uppercase tracking-[0.3em] mb-3">{art.medium}</p>
+                            <h3 className="font-serif text-2xl italic text-[#E7E5E4]">{art.title}</h3>
+                            <p className="text-[#A8A29E] text-xs mt-3 font-sans opacity-75">{art.details}</p>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </Item>
-                ))}
+                      )}
+                    </Item>
+                  );
+                })}
               </PhotoSwipeGallery>
             )}
         </div>
