@@ -27,6 +27,7 @@
       "nameRequired": "Please share your name so I know who is writing.",
       "emailRequired": "An email address is required to get back to you.",
       "emailInvalid": "Enter a valid email address.",
+      "topicRequired": "Please choose what you would like to talk about.",
       "messageRequired": "Tell me a bit about what you would like to discuss.",
       "captchaRequired": "Please confirm you're human by completing the verification."
     },
