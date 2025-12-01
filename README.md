@@ -1,14 +1,23 @@
 # Elena Portfolio
 
-Static portfolio site built with Vite and React.
+Static portfolio site built with Vite, React, and Tailwind CSS. This is a personal portfolio and is not intended for general-purpose reuse or redistribution.
+
+## Getting started
+- Install dependencies with `npm install` (Node 18+ recommended).
+- `npm run dev` – start the local dev server.
+- `npm run build` – compile an optimized production bundle.
+- `npm run preview` – serve the production build locally for smoke testing.
+- `npm test` – run node-based sanity checks to confirm locale files share the same shape and JSON assets parse correctly.
 
 ## Localization
 Translations are stored as JSON files in `public/i18n`. The app lazily fetches the selected locale and merges it with the English baseline to ensure missing keys fall back gracefully. Static JSON requests honor Vite's `base` path so assets resolve correctly on subpaths.
 
-## Development
-- `npm run dev` – start the local dev server.
-- `npm run build` – build for production.
-- `npm test` – run node-based sanity checks to confirm locale files share the same shape and JSON assets parse correctly.
+## Development notes
+Vite provides the dev server and bundling, with React components styled via Tailwind utility classes. No backend services are bundled; the site deploys as static assets.
+
+### Lightbox usage
+- The gallery lightbox supports keyboard arrows, Escape to close, and touch swipes/mobile buttons to move through images.
+- Provide meaningful `title`, `category`, and `details` fields in `data/artworks.json` so captions and alt text stay helpful.
 
 ## Assets
 - Images under `public/images` are tracked directly in Git (no LFS) so they publish cleanly to GitHub Pages and other static hosts.
