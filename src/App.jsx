@@ -30,7 +30,7 @@ export default function App() {
   const [touchedFields, setTouchedFields] = useState({});
   const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '' });
   const closeButtonRef = useRef(null);
-  const translationCache = useRef({});
+  const translationCache = useRef({}); // Cache per-locale dictionaries to avoid redundant fetches when toggling languages.
   const captchaRef = useRef(null);
   const [captchaToken, setCaptchaToken] = useState('');
   const [captchaError, setCaptchaError] = useState('');
@@ -103,7 +103,7 @@ export default function App() {
       })
       .then((data) => {
         if (isMounted) {
-          setArtworks(data);
+          setArtworks(data); // Load once so filters and lightbox share a consistent artwork list.
         }
       })
       .catch((err) => {
@@ -214,7 +214,7 @@ export default function App() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const validation = validateForm(formData);
+    const validation = validateForm(formData); // Re-run validation at submit time to catch untouched fields.
     setTouchedFields({ name: true, email: true, topic: true, message: true });
     setFormErrors(validation);
     setSubmissionState({ status: 'idle', message: '' });
