@@ -36,7 +36,7 @@
       "error": "שליחת הטופס נכשלה. נסה שוב מאוחר יותר.",
       "misconfigured": "הטופס אינו מוגדר. נסה שוב מאוחר יותר."
     },
-    "mailto": { "recipient": "hello@elenayarichuk.com", "subject": "פנייה חדשה:" }
+    "subjectPrefix": "פנייה חדשה:"
   },
   "footer": { "copyright": "© 2025 ילנה ירייצ'וק." }
 }

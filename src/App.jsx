@@ -7,14 +7,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Globe,
-  Mail,
   Palette,
   Calculator
 } from 'lucide-react';
 
 const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
-const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || '17e9fbc8-bee6-47c3-88a8-4121afd5a48b';
-const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY || 'eec02a16-0576-47a0-9400-c080c842156a';
+const WEB3FORMS_ACCESS_KEY = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY;
 
 const mergeWithFallback = (base, override) => {
   if (Array.isArray(base)) {
@@ -337,7 +336,7 @@ export default function App() {
     setFormErrors(validateForm(formData));
   };
 
-  const submissionSubject = translations?.contact?.mailto?.subject || 'New inquiry:';
+  const submissionSubject = translations?.contact?.subjectPrefix || 'New inquiry:';
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -404,6 +403,10 @@ export default function App() {
     } catch (error) {
       console.error(error);
       setSubmissionState({ status: 'error', message: t.contact.submission.error });
+      setCaptchaToken('');
+      if (window?.hcaptcha && captchaWidgetId.current !== null) {
+        window.hcaptcha.reset(captchaWidgetId.current);
+      }
     }
   };
 
@@ -717,13 +720,6 @@ export default function App() {
                   </span>
                 ))}
               </div>
-              <div className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-black/20">
-                <Mail className="text-[#C5A059]" size={18} />
-                <div>
-                  <p className="text-sm text-[#E7E5E4] font-semibold">{t.contact.mailto.recipient}</p>
-                  <p className="text-xs text-[#8A8178]">{t.contact.mailto.subject}</p>
-                </div>
-              </div>
               <div className="flex items-center gap-2 text-xs text-[#78716C]">
                 <Calculator size={14} />
                 <span className="uppercase tracking-[0.2em]">{t.gallery.title}</span>
@@ -875,9 +871,8 @@ export default function App() {
             </form>
           </div>
 
-          <div className="mt-16 flex justify-center space-x-8 text-[#57534E]">
+          <div className="mt-16 flex justify-center text-[#57534E]">
              <Instagram className="w-5 h-5 hover:text-[#C5A059] transition-colors cursor-pointer" />
-             <Mail className="w-5 h-5 hover:text-[#C5A059] transition-colors cursor-pointer" />
           </div>
         </div>
       </section>

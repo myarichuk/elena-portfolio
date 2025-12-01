@@ -36,7 +36,7 @@
       "error": "Something went wrong sending your message. Please try again shortly.",
       "misconfigured": "Contact form is not configured. Please try again later."
     },
-    "mailto": { "recipient": "hello@elenayarichuk.com", "subject": "New inquiry:" }
+    "subjectPrefix": "New inquiry:"
   },
   "footer": { "copyright": "© 2025 Yelena Yarichuk." }
 }
