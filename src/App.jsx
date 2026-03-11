@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { HelmetProvider, Helmet } from 'react-helmet-async';
 import Contact from './components/Contact';
 import Gallery from './components/Gallery';
 import Hero from './components/Hero';
@@ -291,8 +292,28 @@ export default function App() {
     );
   }
 
+
+  const seoTitle = `${t.artist?.name || "Elena's"} ${t.nav?.works || "Portfolio"}`;
+  const seoDescription = t.hero?.desc || "Portfolio";
+  const seoKeywords = `${t.artist?.name}, portfolio, art, paintings, gallery`;
+  const defaultImage = artworks && artworks.length > 0 ? resolveImageSrc(artworks[0].src, { upscale: true }) : '';
+
   return (
-    <div className={`bg-[#12100E] text-[#E7E5E4] font-sans selection:bg-[#C5A059] selection:text-black min-h-screen ${isRTL ? 'font-hebrew-sans' : ''}`}>
+    <HelmetProvider>
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <meta name="keywords" content={seoKeywords} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:type" content="website" />
+        {defaultImage && <meta property="og:image" content={defaultImage} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
+        {defaultImage && <meta name="twitter:image" content={defaultImage} />}
+      </Helmet>
+      <div className={`bg-[#12100E] text-[#E7E5E4] font-sans selection:bg-[#C5A059] selection:text-black min-h-screen ${isRTL ? 'font-hebrew-sans' : ''}`}>
       {translationsError && (
         <div className="bg-red-900/60 text-red-100 text-center text-sm py-3 px-4">
           Using fallback translations. {translationsError}
@@ -333,6 +354,7 @@ export default function App() {
 
       <Gallery
         t={t}
+        lang={lang}
         artworksLoading={artworksLoading}
         artworksError={artworksError}
         filteredArtworks={filteredArtworks}
@@ -368,5 +390,6 @@ export default function App() {
       </footer>
 
     </div>
+    </HelmetProvider>
   );
 }

@@ -3,6 +3,7 @@ import { Gallery as PhotoSwipeGallery, Item } from 'react-photoswipe-gallery';
 import { getItemDimensions } from '../utils/galleryDimensions';
 export default function Gallery({
   t,
+  lang,
   artworksLoading,
   artworksError,
   filteredArtworks,
@@ -117,7 +118,7 @@ export default function Gallery({
                         >
                           <img
                             src={resolveImageSrc(art.src)}
-                            alt={art.title}
+                            alt={art.alt ? art.alt[lang] : art.title}
                             className={`w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105 opacity-90 group-hover:opacity-100 ${
                               art.grayscale ? 'grayscale' : ''
                             }`}
