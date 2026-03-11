@@ -5,7 +5,12 @@
     "category": "oil",
     "src": "images/artwork-1.svg",
     "medium": "Oil on Canvas",
-    "details": "2023"
+    "details": "2023",
+    "alt": {
+      "en": "Weekend Study",
+      "ru": "Воскресный этюд",
+      "he": "מחקר סוף שבוע"
+    }
   },
   {
     "id": 2,
@@ -13,7 +18,12 @@
     "category": "abstract",
     "src": "https://images.unsplash.com/photo-1541963463532-d68292c34b19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     "medium": "Mixed Media",
-    "details": "2023"
+    "details": "2023",
+    "alt": {
+      "en": "Evening Texture",
+      "ru": "Вечерняя текстура",
+      "he": "מרקם ערב"
+    }
   },
   {
     "id": 3,
@@ -21,7 +31,12 @@
     "category": "portrait",
     "src": "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     "medium": "Acrylic on Wood",
-    "details": "Private Collection"
+    "details": "Private Collection",
+    "alt": {
+      "en": "Sister",
+      "ru": "Сестра",
+      "he": "אחות"
+    }
   },
   {
     "id": 4,
@@ -30,7 +45,12 @@
     "src": "https://images.unsplash.com/photo-1615800098779-1be8287d4554?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     "medium": "Charcoal",
     "details": "Sketchbook IV",
-    "grayscale": true
+    "grayscale": true,
+    "alt": {
+      "en": "Anatomy Practice",
+      "ru": "Практика анатомии",
+      "he": "תרגול אנטומיה"
+    }
   },
   {
     "id": 5,
@@ -38,7 +58,12 @@
     "category": "oil",
     "src": "https://images.unsplash.com/photo-1549887552-93f8efb87dfb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     "medium": "Oil on Canvas",
-    "details": "2022"
+    "details": "2022",
+    "alt": {
+      "en": "Still Life #42",
+      "ru": "Натюрморт №42",
+      "he": "טבע דומם #42"
+    }
   },
   {
     "id": 6,
@@ -46,6 +71,11 @@
     "category": "abstract",
     "src": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     "medium": "Acrylic Pour",
-    "details": "2025"
+    "details": "2025",
+    "alt": {
+      "en": "After Tax Season",
+      "ru": "После налогового сезона",
+      "he": "אחרי עונת המס"
+    }
   }
 ]
